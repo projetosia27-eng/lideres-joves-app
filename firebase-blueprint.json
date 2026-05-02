@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Information about the leader",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Jovem": {
+      "title": "Jovem",
+      "description": "A youth member managed by a leader",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "nome": { "type": "string" },
+        "idade": { "type": "number" },
+        "dataNascimento": { "type": "string" },
+        "tamanhoChinelo": { "type": "string" },
+        "tamanhoRoupa": { "type": "string" },
+        "telefone": { "type": "string" },
+        "fotoUrl": { "type": "string" },
+        "score": { "type": "string", "enum": ["verde", "amarelo", "vermelho"] },
+        "novoConvertido": { "type": "boolean" },
+        "ultimaPresenca": { "type": "string" },
+        "dataCadastro": { "type": "string" },
+        "historicoPresenca": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "nome", "idade", "score", "dataCadastro", "historicoPresenca", "createdAt"]
+    },
+    "Evento": {
+      "title": "Evento",
+      "description": "An event managed by a leader",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "nome": { "type": "string" },
+        "data": { "type": "string" },
+        "realizado": { "type": "boolean" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "nome", "data", "realizado", "createdAt"]
+    },
+    "MaterialDeEstudo": {
+      "title": "MaterialDeEstudo",
+      "description": "A study material created by a leader",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "titulo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["pdf", "video", "artigo", "podcast"] },
+        "link": { "type": "string" },
+        "dataPublicacao": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "titulo", "descricao", "tipo", "link", "dataPublicacao", "createdAt"]
+    },
+    "Transacao": {
+      "title": "Transacao",
+      "description": "A financial transaction (income or expense)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "descricao": { "type": "string" },
+        "valor": { "type": "number" },
+        "tipo": { "type": "string", "enum": ["entrada", "saida"] },
+        "categoria": { "type": "string" },
+        "data": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "descricao", "valor", "tipo", "data", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "UserProfile" },
+      "description": "User profile collection"
+    },
+    "/jovens/{jovemId}": {
+      "schema": { "$ref": "Jovem" },
+      "description": "Jovens collection"
+    },
+    "/eventos/{eventoId}": {
+      "schema": { "$ref": "Evento" },
+      "description": "Eventos collection"
+    },
+    "/materiais/{materialId}": {
+      "schema": { "$ref": "MaterialDeEstudo" },
+      "description": "Materiais collection"
+    },
+    "/transacoes/{transacaoId}": {
+      "schema": { "$ref": "Transacao" },
+      "description": "Transactions collection"
+    }
+  }
+}

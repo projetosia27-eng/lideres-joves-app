@@ -1,0 +1,154 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isVerifiedEmail() { return isSignedIn() && request.auth.token.email_verified == true; }
+
+    function isValidUserCreate(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+        && data.keys().size() == 2
+        && data.email is string && data.email.size() <= 200
+        && data.createdAt == request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      // Allow list with condition just in case, though usually shouldn't list users
+      allow list: if isSignedIn() && request.auth.uid == userId;
+      
+      allow create: if isSignedIn() 
+        && request.auth.uid == userId 
+        && isValidId(userId)
+        && isValidUserCreate(incoming());
+        
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email'])
+        && incoming().email is string && incoming().email.size() <= 200;
+        
+      allow delete: if false;
+    }
+
+    function isValidJovem(data) {
+      return data.userId is string && data.userId.size() <= 128
+        && data.nome is string && data.nome.size() <= 200
+        && data.idade is number
+        && (data.telefone == null || (data.telefone is string && data.telefone.size() <= 20))
+        && data.score is string && (data.score == 'verde' || data.score == 'amarelo' || data.score == 'vermelho')
+        && (data.ultimaPresenca == null || (data.ultimaPresenca is string && data.ultimaPresenca.size() <= 30))
+        && data.dataCadastro is string && data.dataCadastro.size() <= 30
+        && data.historicoPresenca is list && data.historicoPresenca.size() <= 1000;
+    }
+
+    function isValidJovemCreate(data) {
+      return data.keys().hasAll(['userId', 'nome', 'idade', 'score', 'dataCadastro', 'historicoPresenca', 'createdAt'])
+        && data.userId == request.auth.uid
+        && isValidJovem(data)
+        && data.createdAt == request.time;
+    }
+
+    match /jovens/{jovemId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && isValidId(jovemId)
+        && isValidJovemCreate(incoming());
+        
+      allow update: if isSignedIn()
+        && existing().userId == request.auth.uid
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isValidJovem(incoming())
+        && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'idade', 'telefone', 'score', 'ultimaPresenca', 'historicoPresenca', 'updatedAt'])
+        );
+        
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    function isValidEvento(data) {
+      return data.userId is string && data.userId.size() <= 128
+        && data.nome is string && data.nome.size() <= 200
+        && data.data is string && data.data.size() <= 30
+        && data.realizado is bool;
+    }
+
+    function isValidEventoCreate(data) {
+      return data.keys().hasAll(['userId', 'nome', 'data', 'realizado', 'createdAt'])
+        && data.keys().size() <= 6
+        && data.userId == request.auth.uid
+        && isValidEvento(data)
+        && data.createdAt == request.time;
+    }
+
+    match /eventos/{eventoId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && isValidId(eventoId)
+        && isValidEventoCreate(incoming());
+        
+      allow update: if isSignedIn()
+        && existing().userId == request.auth.uid
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && isValidEvento(incoming())
+        && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'data', 'realizado', 'updatedAt'])
+        );
+        
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    function isValidMaterial(data) {
+      return data.userId is string && data.userId.size() <= 128
+        && data.titulo is string && data.titulo.size() <= 200
+        && data.descricao is string && data.descricao.size() <= 2000
+        && data.tipo is string && (data.tipo == 'pdf' || data.tipo == 'video' || data.tipo == 'artigo' || data.tipo == 'podcast')
+        && data.link is string && data.link.size() <= 500
+        && data.dataPublicacao is string && data.dataPublicacao.size() <= 30;
+    }
+
+    function isValidMaterialCreate(data) {
+      return data.keys().hasAll(['userId', 'titulo', 'descricao', 'tipo', 'link', 'dataPublicacao', 'createdAt'])
+        && data.keys().size() <= 8
+        && data.userId == request.auth.uid
+        && isValidMaterial(data)
+        && data.createdAt == request.time;
+    }
+
+    match /materiais/{materialId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && isValidId(materialId)
+        && isValidMaterialCreate(incoming());
+        
+      allow update: if isSignedIn()
+        && existing().userId == request.auth.uid
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && isValidMaterial(incoming())
+        && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['titulo', 'descricao', 'tipo', 'link', 'dataPublicacao', 'updatedAt'])
+        );
+        
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}

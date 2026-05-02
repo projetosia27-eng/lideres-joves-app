@@ -1,0 +1,189 @@
+import { Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth, db } from '../firebase';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [FormsModule],
+  template: `
+    <div class="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 font-sans transition-colors duration-200">
+      <div class="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 overflow-hidden">
+        
+        <div class="px-8 pt-8 pb-6 flex flex-col items-center">
+          <div class="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white mb-6 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 transform rotate-[-3deg]">
+            <span class="material-symbols-outlined text-[36px]">local_fire_department</span>
+          </div>
+          <h1 class="text-2xl font-bold font-display text-slate-900 dark:text-white tracking-tight mb-2">
+            Bem-vindo ao Lidera Jovem
+          </h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400 text-center">
+            Faça login para continuar gerenciando seus jovens e eventos.
+          </p>
+        </div>
+
+        <div class="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 space-y-4">
+          
+          @if (errorMsg()) {
+            <div class="p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 text-sm font-medium flex items-start gap-2">
+              <span class="material-symbols-outlined text-[20px]">error</span>
+              <p class="mt-0.5">{{ errorMsg() }}</p>
+            </div>
+          }
+          
+          <button 
+            type="button" 
+            (click)="loginWithGoogle()"
+            class="w-full flex justify-center items-center gap-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 px-4 py-3 rounded-xl font-semibold transition-colors duration-200">
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 24c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 21.53 7.7 24 12 24z" />
+              <path fill="#FBBC05" d="M5.84 15.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V8.06H2.18C1.43 9.55 1 11.23 1 13s.43 3.45 1.18 4.94l3.66-2.84z" />
+              <path fill="#EA4335" d="M12 4.75c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.49 14.97 0 12 0 7.7 0 3.99 2.47 2.18 6.06l3.66 2.84c.87-2.6 3.3-4.15 6.16-4.15z" />
+            </svg>
+            Continuar com Google
+          </button>
+          
+          <div class="relative flex items-center py-2">
+            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+            <span class="flex-shrink-0 mx-4 text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Ou com email</span>
+            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+          </div>
+
+          <form (ngSubmit)="isRegistering() ? register() : login()" class="space-y-4">
+            <div>
+              <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email"
+                [(ngModel)]="email"
+                required
+                autocomplete="email"
+                class="w-full px-4 py-3 bg-white border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none transition-shadow text-slate-900"
+                placeholder="seu@email.com">
+            </div>
+
+            <div>
+              <label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
+              <input 
+                type="password" 
+                id="password" 
+                name="password"
+                [(ngModel)]="password"
+                required
+                autocomplete="current-password"
+                class="w-full px-4 py-3 bg-white border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none transition-shadow text-slate-900"
+                placeholder="••••••••">
+            </div>
+
+            <button 
+              type="submit" 
+              class="w-full flex justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors shadow-md shadow-indigo-200 dark:shadow-indigo-900/20">
+              {{ isRegistering() ? 'Criar Conta' : 'Entrar' }}
+            </button>
+            
+            <div class="text-center pt-2">
+              <button 
+                type="button" 
+                (click)="toggleMode()"
+                class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+                {{ isRegistering() ? 'Já tem uma conta? Entrar' : 'Não tem conta? Criar uma' }}
+              </button>
+            </div>
+            
+            @if (isRegistering()) {
+              <div class="mt-4 p-4 text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl text-center">
+                <strong>Atenção:</strong> O cadastro por Email/Senha requer que este método de autenticação esteja ativado no Firebase Console para funcionar.
+              </div>
+            }
+          </form>
+        </div>
+      </div>
+    </div>
+  `
+})
+export class Login {
+  router = inject(Router);
+  
+  email = '';
+  password = '';
+  errorMsg = signal('');
+  isRegistering = signal(false);
+
+  toggleMode() {
+    this.isRegistering.set(!this.isRegistering());
+    this.errorMsg.set('');
+  }
+
+  async login() {
+    if (!this.email || !this.password) return;
+    this.errorMsg.set('');
+    
+    try {
+      await signInWithEmailAndPassword(auth, this.email, this.password);
+      await this.ensureUserDocument();
+      this.router.navigate(['/dashboard']);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        const err = error as unknown as { code?: string, message?: string };
+        if (err.code === 'auth/invalid-credential') {
+          this.errorMsg.set('Email ou senha incorretos.');
+        } else {
+          this.errorMsg.set(err.message || error.message);
+        }
+      }
+    }
+  }
+
+  async register() {
+    if (!this.email || !this.password) return;
+    this.errorMsg.set('');
+    
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, this.email, this.password);
+      await this.ensureUserDocument(userCredential.user);
+      this.router.navigate(['/dashboard']);
+    } catch (error: unknown) {
+       if (error instanceof Error) {
+         const err = error as unknown as { code?: string, message?: string };
+         if (err.code === 'auth/email-already-in-use') {
+           this.errorMsg.set('Este email já está em uso.');
+         } else if (err.code === 'auth/operation-not-allowed') {
+           this.errorMsg.set('O login por Email/Senha não está habilitado no Firebase Console.');
+         } else {
+           this.errorMsg.set(err.message || error.message);
+         }
+       }
+    }
+  }
+
+  async loginWithGoogle() {
+    this.errorMsg.set('');
+    try {
+      const provider = new GoogleAuthProvider();
+      // Configure popup or redirect according to your preference and constraints.
+      const result = await signInWithPopup(auth, provider);
+      await this.ensureUserDocument(result.user);
+      this.router.navigate(['/dashboard']);
+    } catch (error: unknown) {
+      if (error instanceof Error) this.errorMsg.set(error.message);
+    }
+  }
+
+  private async ensureUserDocument(user = auth.currentUser) {
+    if (!user) return;
+    
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        email: user.email,
+        createdAt: serverTimestamp()
+      });
+    }
+  }
+}
