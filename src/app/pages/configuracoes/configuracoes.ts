@@ -21,6 +21,11 @@ export class ConfiguracoesComponent implements OnInit {
   showImgbbModal = false;
   imgbbKeyInput = '';
   imgbbKeySavedMsg = false;
+
+  get hasImgbbKey(): boolean {
+    return !!localStorage.getItem('imgbbKey');
+  }
+
   installPwa() {
     // Função de placeholder para evitar erro de compilação
     // Implemente a lógica do PWA se necessário
@@ -146,9 +151,14 @@ export class ConfiguracoesComponent implements OnInit {
           ctx.drawImage(img, 0, 0, width, height);
           const base64 = canvas.toDataURL('image/png');
           try {
-            // Faz upload para o imgbb
-            const url = await this.imgbb.uploadImage(base64);
-            this.formData.logoUrl = url;
+            if (this.hasImgbbKey) {
+              // Faz upload para o imgbb
+              const url = await this.imgbb.uploadImage(base64);
+              this.formData.logoUrl = url;
+            } else {
+              // Armazena como base64 (fallback) ou previne. Como o botão estará desabilitado, isso é uma proteção extra.
+              this.formData.logoUrl = base64;
+            }
           } catch {
             alert('Erro ao enviar imagem para o imgbb.');
           }

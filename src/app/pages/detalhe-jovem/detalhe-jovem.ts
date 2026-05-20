@@ -24,6 +24,10 @@ export class DetalheJovemComponent {
   showEditModal = signal<boolean>(false);
   dataNascimentoInput = '';
 
+  get hasImgbbKey(): boolean {
+    return !!localStorage.getItem('imgbbKey');
+  }
+
   editJovem = {
     nome: '',
     idade: 18,

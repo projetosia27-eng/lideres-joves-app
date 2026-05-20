@@ -4,11 +4,14 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ImgbbService {
-  private apiKey = '';
+  private apiKey = typeof window !== 'undefined' ? (localStorage.getItem('imgbbKey') || '') : '';
   private endpoint = 'https://api.imgbb.com/1/upload';
 
   setApiKey(key: string) {
     this.apiKey = key;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('imgbbKey', key);
+    }
   }
 
   async uploadImage(base64: string): Promise<string> {

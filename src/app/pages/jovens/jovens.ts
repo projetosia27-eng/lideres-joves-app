@@ -26,6 +26,10 @@ export class JovensComponent implements OnInit {
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
   dataNascimentoInput = '';
   
+  get hasImgbbKey(): boolean {
+    return !!localStorage.getItem('imgbbKey');
+  }
+  
   newJovem = {
     nome: '',
     idade: 18,
@@ -37,6 +41,52 @@ export class JovensComponent implements OnInit {
     score: 'verde' as StatusScore,
     novoConvertido: false
   };
+
+  get contactsSupported(): boolean {
+    return typeof window !== 'undefined' && typeof navigator !== 'undefined' && 'contacts' in navigator;
+  }
+
+  async importContact() {
+    if (!this.contactsSupported) {
+      alert('A importação de contatos não é suportada neste navegador ou dispositivo.');
+      return;
+    }
+
+    try {
+      // Abre o seletor nativo de contatos solicitando o nome e o telefone
+      const props = ['name', 'tel'];
+      const opts = { multiple: false };
+      
+      const nav = navigator as unknown as { 
+        contacts: { 
+          select: (props: string[], opts: { multiple: boolean }) => Promise<{ name?: string[]; tel?: string[] }[]> 
+        } 
+      };
+      
+      const contacts = await nav.contacts.select(props, opts);
+      if (contacts && contacts.length > 0) {
+        const contact = contacts[0];
+        // Nome completo
+        if (contact.name && contact.name.length > 0) {
+          this.newJovem.nome = contact.name[0];
+        }
+        // Telefone formatado
+        if (contact.tel && contact.tel.length > 0) {
+          const rawPhone = contact.tel[0];
+          // Limpa caracteres especiais, mantendo os números e o sinal + do DDI se houver
+          this.newJovem.telefone = rawPhone.replace(/[^\d+]/g, '');
+        }
+        this.cdr.detectChanges();
+      }
+    } catch (err: unknown) {
+      console.error('Erro ao importar contato:', err);
+      const errorWithName = err as { name?: string; message?: string };
+      // O AbortError acontece caso o usuário feche a lista de contatos nativa sem selecionar
+      if (errorWithName?.name !== 'AbortError') {
+        alert('Erro ao carregar contato do celular: ' + (errorWithName?.message || 'Erro desconhecido'));
+      }
+    }
+  }
 
   filteredJovens = computed(() => {
     if (this.filterType() === 'novos') {
