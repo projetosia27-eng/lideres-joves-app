@@ -76,6 +76,15 @@ export interface Igreja {
   updatedAt?: unknown;
 }
 
+export interface DiretoriaMember {
+  id: string;
+  userId: string;
+  nome: string;
+  cargo: string;
+  fotoUrl?: string | null;
+  createdAt?: unknown;
+}
+
 enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
@@ -131,12 +140,14 @@ export class DataService {
   public eventos = signal<Evento[]>([]);
   public materiais = signal<MaterialDeEstudo[]>([]);
   public transacoes = signal<Transacao[]>([]);
+  public diretoria = signal<DiretoriaMember[]>([]);
   public igreja = signal<Igreja | null>(null);
 
   private unsubJovens?: () => void;
   private unsubEventos?: () => void;
   private unsubMateriais?: () => void;
   private unsubTransacoes?: () => void;
+  private unsubDiretoria?: () => void;
   private unsubIgreja?: () => void;
 
   constructor() {
@@ -198,6 +209,13 @@ export class DataService {
       this.transacoes.set(result);
     }, error => handleFirestoreError(error, OperationType.GET, 'transacoes'));
 
+    const diretoriaQuery = query(collection(db, 'diretoria'), where('userId', '==', userId));
+    this.unsubDiretoria = onSnapshot(diretoriaQuery, snapshot => {
+      const result: DiretoriaMember[] = [];
+      snapshot.forEach(doc => result.push({ id: doc.id, ...doc.data() } as DiretoriaMember));
+      this.diretoria.set(result);
+    }, error => handleFirestoreError(error, OperationType.GET, 'diretoria'));
+
     const igrejaQuery = query(collection(db, 'igrejas'), where('userId', '==', userId));
     this.unsubIgreja = onSnapshot(igrejaQuery, snapshot => {
       if (!snapshot.empty) {
@@ -213,11 +231,13 @@ export class DataService {
     if (this.unsubEventos) this.unsubEventos();
     if (this.unsubMateriais) this.unsubMateriais();
     if (this.unsubTransacoes) this.unsubTransacoes();
+    if (this.unsubDiretoria) this.unsubDiretoria();
     if (this.unsubIgreja) this.unsubIgreja();
     this.jovens.set([]);
     this.eventos.set([]);
     this.materiais.set([]);
     this.transacoes.set([]);
+    this.diretoria.set([]);
     this.igreja.set(null);
   }
 
@@ -426,6 +446,30 @@ export class DataService {
       await deleteDoc(doc(db, 'transacoes', id));
     } catch (err) {
       handleFirestoreError(err, OperationType.DELETE, 'transacoes');
+    }
+  }
+
+  async addDiretoriaMember(membro: Omit<DiretoriaMember, 'id' | 'userId' | 'createdAt'>) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+    try {
+      const newRef = doc(collection(db, 'diretoria'));
+      const newMember = {
+        userId,
+        ...membro,
+        createdAt: serverTimestamp()
+      };
+      await setDoc(newRef, newMember);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, 'diretoria');
+    }
+  }
+
+  async deleteDiretoriaMember(id: string) {
+    try {
+      await deleteDoc(doc(db, 'diretoria', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, 'diretoria');
     }
   }
 }

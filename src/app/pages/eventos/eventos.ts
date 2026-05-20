@@ -53,5 +53,9 @@ export class EventosComponent {
   enviarAviso(eventoId: string) {
     this.router.navigate(['/jovens'], { queryParams: { avisoEvento: eventoId } });
   }
+
+  isFinished(evento: any): boolean {
+    return new Date(evento.data) < new Date();
+  }
 }
 

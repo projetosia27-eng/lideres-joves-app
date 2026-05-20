@@ -64,6 +64,19 @@
       },
       "required": ["userId", "titulo", "descricao", "tipo", "link", "dataPublicacao", "createdAt"]
     },
+    "DiretoriaMember": {
+      "title": "DiretoriaMember",
+      "description": "A member of the board",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "nome": { "type": "string" },
+        "cargo": { "type": "string" },
+        "fotoUrl": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "nome", "cargo", "createdAt"]
+    },
     "Transacao": {
       "title": "Transacao",
       "description": "A financial transaction (income or expense)",
@@ -97,6 +110,10 @@
     "/materiais/{materialId}": {
       "schema": { "$ref": "MaterialDeEstudo" },
       "description": "Materiais collection"
+    },
+    "/diretoria/{membroId}": {
+      "schema": { "$ref": "DiretoriaMember" },
+      "description": "Diretoria collection"
     },
     "/transacoes/{transacaoId}": {
       "schema": { "$ref": "Transacao" },

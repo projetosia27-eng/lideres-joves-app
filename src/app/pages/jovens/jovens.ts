@@ -22,6 +22,7 @@ export class JovensComponent implements OnInit {
   showModal = signal(false);
   showMessageModal = signal(false);
   jovemToDelete = signal<string | null>(null);
+  selectedJovens = signal<Set<string>>(new Set());
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
   dataNascimentoInput = '';
@@ -29,7 +30,31 @@ export class JovensComponent implements OnInit {
   get hasImgbbKey(): boolean {
     return !!localStorage.getItem('imgbbKey');
   }
+
+  toggleSelection(id: string) {
+    const next = new Set(this.selectedJovens());
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    this.selectedJovens.set(next);
+  }
+
+  toggleSelectAll() {
+    if (this.selectedJovens().size === this.data.jovens().length) {
+      this.selectedJovens.set(new Set());
+    } else {
+      this.selectedJovens.set(new Set(this.data.jovens().map(j => j.id)));
+    }
+  }
   
+  sendMessageToSelected() {
+    const selected = this.data.jovens().filter(j => this.selectedJovens().has(j.id));
+    for (const j of selected) {
+       if (j.telefone) {
+         window.open(this.getWhatsAppLink(j.telefone, j.nome), '_blank');
+       }
+    }
+  }
+
   newJovem = {
     nome: '',
     idade: 18,

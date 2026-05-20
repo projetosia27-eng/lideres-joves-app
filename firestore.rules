@@ -158,6 +158,40 @@ service cloud.firestore {
       allow delete: if isSignedIn() && existing().userId == request.auth.uid;
     }
 
+    function isValidDiretoria(data) {
+      return data.userId is string && data.userId.size() <= 128
+        && data.nome is string && data.nome.size() <= 200
+        && data.cargo is string && data.cargo.size() <= 200
+        && (!("fotoUrl" in data) || data.fotoUrl == null || (data.fotoUrl is string && data.fotoUrl.size() <= 1048487));
+    }
+
+    function isValidDiretoriaCreate(data) {
+      return data.keys().hasAll(['userId', 'nome', 'cargo', 'createdAt'])
+        && data.userId == request.auth.uid
+        && isValidDiretoria(data)
+        && data.createdAt == request.time;
+    }
+
+    match /diretoria/{membroId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && isValidId(membroId)
+        && isValidDiretoriaCreate(incoming());
+        
+      allow update: if isSignedIn()
+        && existing().userId == request.auth.uid
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && isValidDiretoria(incoming())
+        && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'cargo', 'fotoUrl'])
+        );
+        
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
     function isValidIgreja(data) {
       return data.userId is string && data.userId.size() <= 128
         && data.nome is string && data.nome.size() <= 200

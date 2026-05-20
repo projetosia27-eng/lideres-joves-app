@@ -1,0 +1,41 @@
+import { Component, inject, signal } from '@angular/core';
+import { DataService, DiretoriaMember } from '../../data.service';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+
+@Component({
+  selector: 'app-diretoria',
+  standalone: true,
+  imports: [FormsModule, RouterLink],
+  templateUrl: './diretoria.component.html'
+})
+export class DiretoriaComponent {
+  data = inject(DataService);
+  showModal = signal(false);
+  newMember: Omit<DiretoriaMember, 'id' | 'userId' | 'createdAt'> = {
+    nome: '',
+    cargo: '',
+    fotoUrl: ''
+  };
+
+  openModal() {
+    this.showModal.set(true);
+    this.newMember = { nome: '', cargo: '', fotoUrl: '' };
+  }
+
+  closeModal() {
+    this.showModal.set(false);
+  }
+
+  save() {
+    if (!this.newMember.nome || !this.newMember.cargo) return;
+    this.data.addDiretoriaMember(this.newMember);
+    this.closeModal();
+  }
+
+  delete(id: string) {
+    if (confirm('Tem certeza que deseja remover este membro da diretoria?')) {
+      this.data.deleteDiretoriaMember(id);
+    }
+  }
+}
