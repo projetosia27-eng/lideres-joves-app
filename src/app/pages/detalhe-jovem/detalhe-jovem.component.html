@@ -238,13 +238,13 @@
         <div class="p-6 space-y-4 overflow-y-auto">
           <div>
             <label for="editJovemFoto" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Foto (opcional)</label>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 min-w-0">
               @if(editJovem.fotoUrl) {
                 <div class="w-10 h-10 shrink-0 rounded-full overflow-hidden border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700">
                   <img [src]="editJovem.fotoUrl" class="w-full h-full object-cover" alt="Foto Selecionada">
                 </div>
               }
-              <input id="editJovemFoto" type="file" accept="image/*" (change)="onFileSelected($event, editJovem)" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-500/10 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-500/20 cursor-pointer">
+              <input id="editJovemFoto" type="file" accept="image/*" (change)="onFileSelected($event, editJovem)" class="w-full min-w-0 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-500/10 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-500/20 cursor-pointer">
             </div>
           </div>
 
