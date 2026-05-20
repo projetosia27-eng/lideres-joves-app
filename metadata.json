@@ -1,6 +1,8 @@
 {
-  "name": "Lidera Jovem",
-  "description": "Dashboard para líderes de jovens acompanharem engajamento e presença do seu grupo.",
+  "name": "Líderes Jovens",
+  "description": "Dashboard administrativo para gerenciamento de ministérios de jovens (jovens, presenças, eventos, financeiro e gerador de devocionais por IA).",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

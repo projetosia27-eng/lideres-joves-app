@@ -1,0 +1,144 @@
+<div class="max-w-4xl mx-auto space-y-8 h-full overflow-y-auto pb-10 pr-2 relative">
+  <!-- Botão X no topo direito -->
+  <button (click)="goToDashboard()" class="absolute right-4 top-4 z-30 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+    <span class="material-symbols-outlined text-[24px]">close</span>
+  </button>
+  <div class="flex items-center gap-3">
+    <!-- Botão para configurar chave do imgbb -->
+    <div class="flex flex-col sm:flex-row sm:justify-end gap-2 mb-2">
+      <button (click)="showImgbbModal = true" class="w-full sm:w-auto px-4 py-3 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-xl font-semibold hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-all text-center">
+        Configurar chave do imgbb
+      </button>
+      <button (click)="installPwa()" class="w-full sm:w-auto px-4 py-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-semibold hover:bg-green-200 dark:hover:bg-green-800 transition-all text-center">
+        Instalar App
+      </button>
+    </div>
+    <!-- Modal de configuração da chave do imgbb -->
+    @if (showImgbbModal) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-8 max-w-md w-full shadow-lg border border-slate-200 dark:border-slate-700 relative">
+          <button (click)="showImgbbModal = false" class="absolute top-2 right-2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+          <h2 class="text-lg font-bold mb-2">O que é imgbb?</h2>
+          <p class="text-sm mb-3 text-slate-700 dark:text-slate-300">O <b>imgbb</b> é um serviço gratuito e confiável de hospedagem de imagens. Sua chave é usada apenas para enviar as imagens do seu ministério para a nuvem.</p>
+          <h3 class="text-base font-semibold mb-2 mt-4">Como obter sua chave do imgbb?</h3>
+          <ol class="list-decimal pl-5 text-sm mb-3 space-y-1">
+            <li>Acesse <a href='https://imgbb.com/' target='_blank' class='text-indigo-600 underline'>imgbb.com</a> e faça login/crie uma conta.</li>
+            <li>Vá em <b>Menu &gt; API</b> ou acesse <a href='https://api.imgbb.com/' target='_blank' class='text-indigo-600 underline'>api.imgbb.com</a>.</li>
+            <li>Gere uma nova chave de API.</li>
+            <li>Copie a chave e cole abaixo:</li>
+          </ol>
+          <input [(ngModel)]="imgbbKeyInput" placeholder="Cole sua chave aqui" class="w-full px-3 py-2 border rounded mb-3 bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+          <button (click)="saveImgbbKey()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-xl transition-all">Salvar chave</button>
+          @if (imgbbKeySavedMsg) {
+            <div class="mt-2 text-green-600 dark:text-green-400 text-sm">Chave salva com sucesso!</div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+  <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+    <span class="material-symbols-outlined text-2xl">church</span>
+  </div>
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Configurações da Igreja</h1>
+    <p class="text-slate-500 dark:text-slate-400 text-sm">Gerencie os dados do seu ministério e informações para relatórios.</p>
+  </div>
+  <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+    <div class="p-6 sm:p-8 space-y-8">
+      <!-- Seção de Logo -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 border-b border-slate-100 dark:border-slate-700">
+        <div class="relative group cursor-pointer font-sans" (click)="fileInput.click()" tabindex="0" role="button" (keydown.enter)="fileInput.click()">
+          @if (formData.logoUrl) {
+            <img [src]="formData.logoUrl" alt="Logo da Igreja" class="w-24 h-24 object-cover rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+          } @else {
+            <div class="w-24 h-24 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-slate-400 group-hover:border-indigo-400 group-hover:text-indigo-500 transition-colors">
+              <span class="material-symbols-outlined text-3xl mb-1">add_photo_alternate</span>
+              <span class="text-[10px] font-medium tracking-wide uppercase">Adicionar</span>
+            </div>
+          }
+          <div class="absolute inset-0 bg-slate-900/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <span class="material-symbols-outlined text-white">edit</span>
+          </div>
+          <input type="file" #fileInput class="hidden" accept="image/*" (change)="onFileSelected($event)">
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-800 dark:text-white mb-1">Logo do Ministério</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Recomendado: Imagem quadrada em formato PNG ou JPG (max 1MB).</p>
+          @if (formData.logoUrl) {
+            <button (click)="formData.logoUrl = null" class="mt-3 text-sm text-red-500 font-medium hover:text-red-600 transition-colors">Remover logo</button>
+          }
+        </div>
+      </div>
+      <!-- Seção de Tema -->
+      <div class="py-10 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div>
+          <h3 class="text-base font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-500">contrast</span>
+            Aparência
+          </h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Personalize o visual do aplicativo entre os modos claro e escuro.</p>
+        </div>
+        <button (click)="themeService.toggleTheme()"
+                class="w-full sm:w-auto flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-700 shadow-sm group">
+          <span class="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform"
+            [ngClass]="themeService.isDark() ? 'text-amber-500' : 'text-indigo-600'">
+            {{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}
+          </span>
+          <span class="font-bold uppercase tracking-widest text-xs">Ativar Modo {{ themeService.isDark() ? 'Claro' : 'Escuro' }}</span>
+        </button>
+      </div>
+      <!-- Formulário -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-1.5 md:col-span-2">
+          <label for="igrejaNome" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Nome da Igreja / Ministério</label>
+          <input type="text" id="igrejaNome" [(ngModel)]="formData.nome" placeholder="Ex: Ministério Jovem IBC" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-white">
+        </div>
+        <div class="space-y-1.5 md:col-span-2">
+          <label for="igrejaEndereco" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Endereço Completo</label>
+          <input type="text" id="igrejaEndereco" [(ngModel)]="formData.endereco" placeholder="Rua, Número, Bairro, Cidade" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-white">
+        </div>
+        <div class="space-y-1.5">
+          <label for="igrejaTelefone" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Telefone / WhatsApp</label>
+          <input type="text" id="igrejaTelefone" [(ngModel)]="formData.telefone" placeholder="(00) 00000-0000" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-white">
+        </div>
+        <div class="space-y-1.5">
+          <label for="igrejaInstagram" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Instagram</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">&#64;</span>
+            <input type="text" id="igrejaInstagram" [(ngModel)]="formData.instagram" placeholder="jovens.ibc" class="w-full pl-9 pr-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-white">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-4 sm:px-8 sm:py-5 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="text-xs text-slate-500 dark:text-slate-400 w-full sm:w-auto text-center sm:text-left">
+        @if (saving()) {
+          Salvando...
+        } @else {
+          @if (saved()) {
+            <span class="text-emerald-500 font-medium flex items-center justify-center sm:justify-start gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Configurações salvas!</span>
+          } @else {
+            As informações serão usadas no cabeçalho dos relatórios.
+          }
+        }
+      </div>
+      <button (click)="saveParams()" [disabled]="saving() || !isValid()" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        @if (saving()) {
+          <span class="material-symbols-outlined animate-spin">refresh</span>
+        } @else {
+          <span class="material-symbols-outlined text-[20px]">save</span>
+        }
+        Salvar Dados
+      </button>
+    </div>
+    <!-- Botão Sair -->
+    <div class="px-6 py-4 sm:px-8 flex justify-end">
+      <button (click)="logout()" class="w-full sm:w-auto px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 border-0 cursor-pointer">
+        <span class="material-symbols-outlined text-[20px]">logout</span>
+        Sair
+      </button>
+    </div>
+  </div>
+</div>
