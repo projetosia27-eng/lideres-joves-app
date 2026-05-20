@@ -203,6 +203,20 @@ export class JovensComponent implements OnInit {
     }
   }
 
+  onNativeDateChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value; // Format is YYYY-MM-DD
+    if (!value) return;
+
+    this.newJovem.dataNascimento = value;
+    this.calculateAge();
+
+    const parts = value.split('-');
+    if (parts.length === 3) {
+      this.dataNascimentoInput = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
+
   getBadgeClass(score: StatusScore): string {
     switch (score) {
       case 'verde': return 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20';

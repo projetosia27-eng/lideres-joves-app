@@ -273,6 +273,20 @@ export class DetalheJovemComponent {
     }
   }
 
+  onNativeDateChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value; // Format is YYYY-MM-DD
+    if (!value) return;
+
+    this.editJovem.dataNascimento = value;
+    this.calculateAge();
+
+    const parts = value.split('-');
+    if (parts.length === 3) {
+      this.dataNascimentoInput = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
+
   calculateAge() {
     if (!this.editJovem.dataNascimento) return;
     const birthDate = new Date(this.editJovem.dataNascimento);
