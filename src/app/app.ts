@@ -53,6 +53,12 @@ import { signOut } from 'firebase/auth';
               Eventos
             </a>
 
+            <a routerLink="/diretoria" routerLinkActive="bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/20" 
+               class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 transition-all group">
+              <span class="material-symbols-outlined text-[20px] group-[.active]:text-white">badge</span>
+              Diretoria
+            </a>
+
             <a routerLink="/materiais" routerLinkActive="bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/20" 
                class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 transition-all group">
               <span class="material-symbols-outlined text-[20px] group-[.active]:text-white">menu_book</span>
@@ -139,6 +145,10 @@ import { signOut } from 'firebase/auth';
               <a routerLink="/eventos" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-16 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
                  <span class="material-symbols-outlined text-[24px]">event</span>
                  <span class="text-[9px] font-black uppercase tracking-wider">Eventos</span>
+              </a>
+              <a routerLink="/diretoria" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-16 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
+                 <span class="material-symbols-outlined text-[24px]">badge</span>
+                 <span class="text-[9px] font-black uppercase tracking-wider">Diretoria</span>
               </a>
               <a routerLink="/materiais" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-14 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
                  <span class="material-symbols-outlined text-[24px]">menu_book</span>
