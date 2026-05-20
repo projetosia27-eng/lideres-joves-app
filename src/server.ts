@@ -10,8 +10,52 @@ import {join} from 'node:path';
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
+// Add body parser for JSON (to accept base64 image data)
+app.use(express.json({ limit: '10mb' }));
+
 const angularApp = new AngularNodeAppEngine({
   allowedHosts: ['*']
+});
+
+/**
+ * Image upload proxy to ImgBB
+ */
+app.post('/api/upload', async (req, res, next) => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      res.status(400).json({ success: false, error: 'No image provided' });
+      return;
+    }
+
+    const apiKey = process.env['IMGBB_API_KEY'];
+    if (!apiKey) {
+      res.status(500).json({ success: false, error: 'IMGBB_API_KEY environment variable is not configured on the server.' });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('key', apiKey);
+    formData.append('image', image.replace(/^data:image\/(png|jpg|jpeg);base64,/, ''));
+
+    const response = await fetch('https://api.imgbb.com/1/upload', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+        const text = await response.text();
+        console.error('Imgbb error:', response.status, text);
+        res.status(response.status).json({ success: false, error: 'Failed to upload to imgbb' });
+        return;
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err: unknown) {
+    console.error('Upload Error:', err);
+    res.status(500).json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' });
+  }
 });
 
 /**

@@ -27,10 +27,6 @@ export class JovensComponent implements OnInit {
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
   dataNascimentoInput = '';
   
-  get hasImgbbKey(): boolean {
-    return !!localStorage.getItem('imgbbKey');
-  }
-
   toggleSelection(id: string) {
     const next = new Set(this.selectedJovens());
     if (next.has(id)) next.delete(id);
@@ -217,20 +213,14 @@ export class JovensComponent implements OnInit {
           ctx.drawImage(img, 0, 0, width, height);
           const base64 = canvas.toDataURL('image/jpeg', 0.85);
 
-          const key = localStorage.getItem('imgbbKey');
-          if (key) {
-            this.imgbb.uploadImage(base64).then(url => {
-              targetObj.fotoUrl = url;
-              this.cdr.detectChanges();
-            }).catch(err => {
-              console.error(err);
-              targetObj.fotoUrl = base64;
-              this.cdr.detectChanges();
-            });
-          } else {
+          this.imgbb.uploadImage(base64).then(url => {
+            targetObj.fotoUrl = url;
+            this.cdr.detectChanges();
+          }).catch(err => {
+            console.error(err);
             targetObj.fotoUrl = base64;
             this.cdr.detectChanges();
-          }
+          });
         }
       };
       img.onerror = () => {

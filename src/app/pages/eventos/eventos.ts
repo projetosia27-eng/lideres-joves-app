@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../data.service';
+import { DataService, Evento } from '../../data.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -54,7 +54,7 @@ export class EventosComponent {
     this.router.navigate(['/jovens'], { queryParams: { avisoEvento: eventoId } });
   }
 
-  isFinished(evento: any): boolean {
+  isFinished(evento: Evento): boolean {
     return new Date(evento.data) < new Date();
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, OnInit } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import { ImgbbService } from '../../imgbb.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,39 +15,14 @@ import { signOut } from 'firebase/auth';
   templateUrl: './configuracoes.component.html',
   styleUrls: ['./configuracoes.component.css']
 })
-export class ConfiguracoesComponent implements OnInit {
+export class ConfiguracoesComponent {
   imgbb = inject(ImgbbService);
-
-  showImgbbModal = false;
-  imgbbKeyInput = '';
-  imgbbKeySavedMsg = false;
-
-  get hasImgbbKey(): boolean {
-    return !!localStorage.getItem('imgbbKey');
-  }
 
   installPwa() {
     // Função de placeholder para evitar erro de compilação
     // Implemente a lógica do PWA se necessário
   }
 
-  ngOnInit() {
-    // Carrega a chave do imgbb do localStorage se existir
-    const key = localStorage.getItem('imgbbKey');
-    if (key) this.imgbb.setApiKey(key);
-  }
-
-  saveImgbbKey() {
-    if (this.imgbbKeyInput.trim().length > 0) {
-      localStorage.setItem('imgbbKey', this.imgbbKeyInput.trim());
-      this.imgbb.setApiKey(this.imgbbKeyInput.trim());
-      this.imgbbKeySavedMsg = true;
-      setTimeout(() => {
-        this.imgbbKeySavedMsg = false;
-        this.showImgbbModal = false;
-      }, 1200);
-    }
-  }
   data = inject(DataService);
   themeService = inject(ThemeService);
   saving = signal(false);
@@ -151,16 +126,11 @@ export class ConfiguracoesComponent implements OnInit {
           ctx.drawImage(img, 0, 0, width, height);
           const base64 = canvas.toDataURL('image/png');
           try {
-            if (this.hasImgbbKey) {
-              // Faz upload para o imgbb
               const url = await this.imgbb.uploadImage(base64);
               this.formData.logoUrl = url;
-            } else {
-              // Armazena como base64 (fallback) ou previne. Como o botão estará desabilitado, isso é uma proteção extra.
-              this.formData.logoUrl = base64;
-            }
           } catch {
-            alert('Erro ao enviar imagem para o imgbb.');
+            alert('Erro ao enviar imagem para o imgbb. A chave foi configurada?');
+            this.formData.logoUrl = base64; // fallback
           }
         }
       };

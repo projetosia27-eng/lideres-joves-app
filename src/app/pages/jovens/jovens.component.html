@@ -157,26 +157,13 @@
                   <img [src]="newJovem.fotoUrl" class="w-full h-full object-cover" alt="Foto selecionada">
                 </div>
               }
-              <input id="jovemFoto" type="file" accept="image/*" [disabled]="!hasImgbbKey" (change)="onFileSelected($event, newJovem)" class="w-full min-w-0 px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm bg-white text-slate-900 file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              <input id="jovemFoto" type="file" accept="image/*" (change)="onFileSelected($event, newJovem)" class="w-full min-w-0 px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm bg-white text-slate-900 file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
             </div>
 
-            @if (!hasImgbbKey) {
-              <div class="mt-2 text-[11px] leading-relaxed text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 p-2.5 rounded-xl border border-amber-100 dark:border-amber-500/20 flex flex-col gap-1">
-                <span class="flex items-center gap-1 font-bold text-amber-700 dark:text-amber-400">
-                  <span class="material-symbols-outlined text-[15px]">warning</span>
-                  Envio de Foto Desabilitado
-                </span>
-                <span>
-                  Para habilitar o envio de fotos, você precisa configurar a chave gratuita da API do <b>ImgBB</b>. Faça o cadastro em <a href="https://imgbb.com" target="_blank" class="underline font-bold hover:text-amber-800 dark:hover:text-amber-200">imgbb.com</a>, obtenha a chave em <b>About > API</b> e salve-a nas 
-                  <a routerLink="/configuracoes" (click)="closeModal()" class="font-bold underline text-amber-700 dark:text-amber-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Configurações para salvar as imagens na nuvem</a>.
-                </span>
-              </div>
-            } @else {
-              <div class="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 p-2 rounded-xl border border-emerald-100 dark:border-emerald-500/20 flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-[15px] text-emerald-500 shrink-0">cloud_done</span>
-                <span><b>Pronto!</b> Fotos serão salvas na nuvem com segurança e sem custos adicionais.</span>
-              </div>
-            }
+            <div class="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 p-2 rounded-xl border border-emerald-100 dark:border-emerald-500/20 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[15px] text-emerald-500 shrink-0">cloud_done</span>
+              <span><b>Pronto!</b> Fotos serão salvas na nuvem com segurança.</span>
+            </div>
           </div>
 
           <div>
