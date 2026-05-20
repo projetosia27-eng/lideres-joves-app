@@ -29,8 +29,10 @@ app.post('/api/upload', async (req, res, next) => {
     }
 
     const apiKey = process.env['IMGBB_API_KEY'];
-    if (!apiKey) {
-      res.status(500).json({ success: false, error: 'IMGBB_API_KEY environment variable is not configured on the server.' });
+    
+    // Se a chave não estiver configurada ou for a padrão, retornar a própria imagem em base64 como fallback
+    if (!apiKey || apiKey === 'MY_IMGBB_API_KEY' || apiKey.trim() === '') {
+      res.json({ success: true, data: { url: image } });
       return;
     }
 
@@ -45,8 +47,9 @@ app.post('/api/upload', async (req, res, next) => {
     
     if (!response.ok) {
         const text = await response.text();
-        console.error('Imgbb error:', response.status, text);
-        res.status(response.status).json({ success: false, error: 'Failed to upload to imgbb' });
+        console.warn('Imgbb error:', response.status, text);
+        // Em caso de falha (ex: chave inválida), fazer fallback suave para base64
+        res.json({ success: true, data: { url: image } });
         return;
     }
 
@@ -54,7 +57,12 @@ app.post('/api/upload', async (req, res, next) => {
     res.json(data);
   } catch (err: unknown) {
     console.error('Upload Error:', err);
-    res.status(500).json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' });
+    // Em caso de exceção de rede, fallback para base64
+    if (req.body && req.body.image) {
+      res.json({ success: true, data: { url: req.body.image } });
+    } else {
+      res.status(500).json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' });
+    }
   }
 });
 

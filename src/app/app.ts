@@ -129,37 +129,66 @@ import { signOut } from 'firebase/auth';
           
           <!-- Bottom Navigation (Mobile Only) -->
           <nav class="lg:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-slate-200 dark:border-white/5 z-40 pb-2 bg-white/90 dark:bg-[#060608]/90">
-            <div class="flex items-center justify-around p-2">
-              <a routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-16 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
-                <span class="material-symbols-outlined text-[24px]">dashboard</span>
+            <div class="grid grid-cols-5 items-center px-1 py-1 gap-1">
+              <a routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-full [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
+                <span class="material-symbols-outlined text-[22px]">dashboard</span>
                 <span class="text-[9px] font-black uppercase tracking-wider">Início</span>
               </a>
-              <a routerLink="/jovens" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-16 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
-                <span class="material-symbols-outlined text-[24px]">groups</span>
+              <a routerLink="/jovens" routerLinkActive="active-nav" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-full [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
+                <span class="material-symbols-outlined text-[22px]">groups</span>
                 <span class="text-[9px] font-black uppercase tracking-wider">Jovens</span>
               </a>
-              <a routerLink="/presencas" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-16 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
-                <span class="material-symbols-outlined text-[24px]">fact_check</span>
+              <a routerLink="/presencas" routerLinkActive="active-nav" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-full [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
+                <span class="material-symbols-outlined text-[22px]">fact_check</span>
                 <span class="text-[9px] font-black uppercase tracking-wider">Chamada</span>
               </a>
-              <a routerLink="/eventos" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-16 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
-                 <span class="material-symbols-outlined text-[24px]">event</span>
+              <a routerLink="/eventos" routerLinkActive="active-nav" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-full [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
+                 <span class="material-symbols-outlined text-[22px]">event</span>
                  <span class="text-[9px] font-black uppercase tracking-wider">Eventos</span>
               </a>
-              <a routerLink="/diretoria" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-16 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
-                 <span class="material-symbols-outlined text-[24px]">badge</span>
-                 <span class="text-[9px] font-black uppercase tracking-wider">Diretoria</span>
-              </a>
-              <a routerLink="/materiais" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-14 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
-                 <span class="material-symbols-outlined text-[24px]">menu_book</span>
-                 <span class="text-[9px] font-black uppercase tracking-wider">Estudos</span>
-              </a>
-              <a routerLink="/financeiro" routerLinkActive="active-nav" class="flex flex-col items-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-14 [&.active-nav]:text-indigo-600 [&.active-nav]:dark:text-indigo-400">
-                 <span class="material-symbols-outlined text-[24px]">payments</span>
-                 <span class="text-[9px] font-black uppercase tracking-wider">Finanças</span>
-              </a>
+              <button (click)="toggleMobileMenu()" [class.text-indigo-600]="isMobileMenuOpen()" [class.dark:text-indigo-400]="isMobileMenuOpen()" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-400 dark:text-slate-500 transition-colors w-full outline-none">
+                 <span class="material-symbols-outlined text-[22px]">menu</span>
+                 <span class="text-[9px] font-black uppercase tracking-wider">Mais</span>
+              </button>
             </div>
           </nav>
+
+          <!-- Mobile "Mais" Menu Overlay (Bottom Sheet) -->
+          @if (isMobileMenuOpen()) {
+            <div class="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
+              <!-- Backdrop -->
+              <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="closeMobileMenu()"></div>
+              
+              <!-- Content -->
+              <div class="relative bg-white dark:bg-slate-900 w-full rounded-t-3xl shadow-2xl pt-3 pb-8 flex flex-col border-t border-slate-200 dark:border-slate-800">
+                <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
+                <div class="px-6 space-y-1">
+                  <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-2">Mais Opções</h3>
+                  
+                  <a routerLink="/diretoria" (click)="closeMobileMenu()" routerLinkActive="text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400" class="flex items-center gap-4 p-3 rounded-2xl text-slate-700 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-800 transition-all font-bold">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                      <span class="material-symbols-outlined">badge</span>
+                    </div>
+                    Diretoria
+                  </a>
+                  
+                  <a routerLink="/materiais" (click)="closeMobileMenu()" routerLinkActive="text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400" class="flex items-center gap-4 p-3 rounded-2xl text-slate-700 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-800 transition-all font-bold">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                      <span class="material-symbols-outlined">menu_book</span>
+                    </div>
+                    Estudos e Materiais
+                  </a>
+                  
+                  <a routerLink="/financeiro" (click)="closeMobileMenu()" routerLinkActive="text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400" class="flex items-center gap-4 p-3 rounded-2xl text-slate-700 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-800 transition-all font-bold">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                      <span class="material-symbols-outlined">payments</span>
+                    </div>
+                    Controle Financeiro
+                  </a>
+                </div>
+              </div>
+            </div>
+          }
         </main>
       } @else {
         <main class="flex-1 h-screen overflow-y-auto">
