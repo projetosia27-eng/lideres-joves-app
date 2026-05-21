@@ -157,7 +157,7 @@ import { signOut } from 'firebase/auth';
           @if (isMobileMenuOpen()) {
             <div class="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
               <!-- Backdrop -->
-              <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="closeMobileMenu()"></div>
+              <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="closeMobileMenu()" (keyup.escape)="closeMobileMenu()" tabindex="0" role="button" aria-label="Fechar menu"></div>
               
               <!-- Content -->
               <div class="relative bg-white dark:bg-slate-900 w-full rounded-t-3xl shadow-2xl pt-3 pb-8 flex flex-col border-t border-slate-200 dark:border-slate-800">

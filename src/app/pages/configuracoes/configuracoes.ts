@@ -128,8 +128,8 @@ export class ConfiguracoesComponent {
           try {
               const url = await this.imgbb.uploadImage(base64);
               this.formData.logoUrl = url;
-          } catch {
-            alert('Erro ao enviar imagem para o imgbb. A chave foi configurada?');
+          } catch (err: unknown) {
+            console.error('Erro ao enviar imagem:', err);
             this.formData.logoUrl = base64; // fallback
           }
         }

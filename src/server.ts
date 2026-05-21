@@ -20,7 +20,7 @@ const angularApp = new AngularNodeAppEngine({
 /**
  * Image upload proxy to ImgBB
  */
-app.post('/api/upload', async (req, res, next) => {
+app.post('/api/upload', async (req, res) => {
   try {
     const { image } = req.body;
     if (!image) {
@@ -47,7 +47,12 @@ app.post('/api/upload', async (req, res, next) => {
     
     if (!response.ok) {
         const text = await response.text();
-        console.warn('Imgbb error:', response.status, text);
+        
+        // Silent fallback for invalid API key, otherwise log the error
+        if (!text.includes('Invalid API v1 key')) {
+          console.warn('Imgbb error:', response.status, text);
+        }
+        
         // Em caso de falha (ex: chave inválida), fazer fallback suave para base64
         res.json({ success: true, data: { url: image } });
         return;
