@@ -25,8 +25,23 @@ export class JovensComponent implements OnInit {
   selectedJovens = signal<Set<string>>(new Set());
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
+  bannerUrl = signal<string | null>(null);
   dataNascimentoInput = '';
   
+  onBannerSelected(event: Event) {
+     const file = (event.target as HTMLInputElement).files?.[0];
+     if (!file) return;
+     const reader = new FileReader();
+     reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        this.imgbb.uploadImage(base64).then(url => {
+            this.bannerUrl.set(url);
+            this.cdr.detectChanges();
+        });
+     };
+     reader.readAsDataURL(file);
+  }
+
   toggleSelection(id: string) {
     const next = new Set(this.selectedJovens());
     if (next.has(id)) next.delete(id);
@@ -44,9 +59,15 @@ export class JovensComponent implements OnInit {
   
   sendMessageToSelected() {
     const selected = this.data.jovens().filter(j => this.selectedJovens().has(j.id));
+    let delay = 0;
+    const banner = this.bannerUrl() ? `\n\n${this.bannerUrl()}` : '';
+    
     for (const j of selected) {
        if (j.telefone) {
-         window.open(this.getWhatsAppLink(j.telefone, j.nome), '_blank');
+         setTimeout(() => {
+            window.open(this.getWhatsAppLink(j.telefone, j.nome) + encodeURIComponent(banner), '_blank');
+         }, delay);
+         delay += 1500; // Small delay between tabs
        }
     }
   }
