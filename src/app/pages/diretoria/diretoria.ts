@@ -47,9 +47,6 @@ export class DiretoriaComponent {
       console.error('DiretoriaComponent: Delete called with no ID!');
       return;
     }
-    console.log('Attempting to delete member with id:', id);
-    if (confirm('Tem certeza que deseja remover este membro da diretoria?')) {
-      this.data.deleteDiretoriaMember(id);
-    }
+    this.data.deleteDiretoriaMember(id);
   }
 }

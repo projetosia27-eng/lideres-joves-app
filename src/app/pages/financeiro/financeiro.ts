@@ -47,9 +47,7 @@ export class FinanceiroComponent {
   }
 
   async excluirTransacao(id: string) {
-    if (confirm('Deseja realmente excluir esta transação?')) {
-      await this.data.deleteTransacao(id);
-    }
+    await this.data.deleteTransacao(id);
   }
 
   exportFinanceToPDF() {
