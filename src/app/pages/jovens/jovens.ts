@@ -68,8 +68,15 @@ export class JovensComponent implements OnInit {
      return selected.filter(j => j.telefone).map(j => ({
          id: j.id,
          nome: j.nome,
+         mensagem: this.messageTemplate().replace('{nome}', j.nome) + banner,
          link: this.getWhatsAppLink(j.telefone, j.nome) + encodeURIComponent(banner)
      }));
+  }
+
+  copiarMensagem(mensagem: string) {
+     navigator.clipboard.writeText(mensagem).then(() => {
+         alert('Mensagem e link do banner copiados! Agora é só colar no WhatsApp.');
+     });
   }
 
   newJovem = {

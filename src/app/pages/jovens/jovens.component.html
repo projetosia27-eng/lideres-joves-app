@@ -328,9 +328,15 @@
         <div class="p-6 overflow-y-auto max-h-[60vh] space-y-3">
            <p class="text-xs text-slate-500 mb-4">Por limitações de segurança do navegador, clique em cada um abaixo para abrir o WhatsApp individualmente. <b>Nota: O WhatsApp não permite anexar imagens automaticamente via link, apenas o texto com o link da imagem (caso tenha configurado um banner).</b></p>
            @for(j of getSelectedJovensLinks(); track j.id) {
-             <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700">
-               <span class="text-sm truncate font-semibold text-slate-700 dark:text-slate-200">{{ j.nome }}</span>
-               <a [href]="j.link" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">Abrir</a>
+             <div class="flex flex-col gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700">
+               <div class="flex items-center justify-between">
+                 <span class="text-sm truncate font-semibold text-slate-700 dark:text-slate-200">{{ j.nome }}</span>
+                 <a [href]="j.link" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">Abrir WhatsApp</a>
+               </div>
+               <button (click)="copiarMensagem(j.mensagem)" class="w-full px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold rounded-lg hover:bg-indigo-200 flex items-center justify-center gap-2">
+                 <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                 Copiar Mensagem e Banner
+               </button>
              </div>
            }
         </div>
