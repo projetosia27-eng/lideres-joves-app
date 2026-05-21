@@ -260,7 +260,9 @@
             <select id="eventSelect" (change)="selecionarEventoParaMensagem($event)" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
               <option value="">Selecione um evento para gerar a mensagem...</option>
               @for(evento of data.eventos(); track evento.id) {
-                <option [value]="evento.id">{{ evento.nome }} ({{ evento.data | date:'dd/MM' }})</option>
+                @if (!evento.realizado) {
+                  <option [value]="evento.id">{{ evento.nome }} ({{ evento.data | date:'dd/MM' }})</option>
+                }
               }
             </select>
           </div>
