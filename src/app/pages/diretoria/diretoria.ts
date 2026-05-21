@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { DataService, DiretoriaMember } from '../../data.service';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-diretoria',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './diretoria.component.html'
 })
 export class DiretoriaComponent {
@@ -16,6 +17,15 @@ export class DiretoriaComponent {
     cargo: '',
     fotoUrl: ''
   };
+
+  onJovemSelected(event: any) {
+    const selectedJovemId = event.target.value;
+    const jovem = this.data.jovens().find(j => j.id === selectedJovemId);
+    if (jovem) {
+      this.newMember.nome = jovem.nome;
+      this.newMember.fotoUrl = jovem.fotoUrl || '';
+    }
+  }
 
   openModal() {
     this.showModal.set(true);
@@ -32,7 +42,12 @@ export class DiretoriaComponent {
     this.closeModal();
   }
 
-  delete(id: string) {
+  deleteMember(id: string) {
+    if (!id) {
+      console.error('DiretoriaComponent: Delete called with no ID!');
+      return;
+    }
+    console.log('Attempting to delete member with id:', id);
     if (confirm('Tem certeza que deseja remover este membro da diretoria?')) {
       this.data.deleteDiretoriaMember(id);
     }

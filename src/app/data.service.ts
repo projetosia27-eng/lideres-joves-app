@@ -466,9 +466,11 @@ export class DataService {
   }
 
   async deleteDiretoriaMember(id: string) {
+    console.log('DataService: deleting member with id:', id);
     try {
       await deleteDoc(doc(db, 'diretoria', id));
     } catch (err) {
+      console.error('DataService: error deleting member', err);
       handleFirestoreError(err, OperationType.DELETE, 'diretoria');
     }
   }

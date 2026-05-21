@@ -4,19 +4,23 @@
     <button (click)="openModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700">Novo Membro</button>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     @for (membro of data.diretoria(); track membro.id) {
       <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-700">
-            {{ membro.nome[0] }}
+          <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-700 overflow-hidden">
+            @if (membro.fotoUrl) {
+              <img [src]="membro.fotoUrl" class="w-full h-full object-cover" [alt]="membro.nome">
+            } @else {
+              {{ membro.nome[0] }}
+            }
           </div>
           <div>
             <div class="font-bold text-slate-800">{{ membro.nome }}</div>
             <div class="text-sm text-slate-500">{{ membro.cargo }}</div>
           </div>
         </div>
-        <button (click)="delete(membro.id)" class="text-rose-500 hover:text-rose-700">Excluir</button>
+        <button (click)="deleteMember(membro.id)" class="text-rose-500 hover:text-rose-700">Excluir</button>
       </div>
     }
   </div>
@@ -25,7 +29,13 @@
     <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-sm">
       <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-700">
         <h2 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Novo Membro</h2>
-        <input [(ngModel)]="newMember.nome" placeholder="Nome" class="w-full p-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-2 rounded-lg">
+        <select (change)="onJovemSelected($event)" class="w-full p-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-2 rounded-lg">
+          <option value="">Selecione um jovem</option>
+          @for (jovem of data.jovens(); track jovem.id) {
+            <option [value]="jovem.id">{{ jovem.nome }}</option>
+          }
+        </select>
+        <input [(ngModel)]="newMember.nome" placeholder="Nome" class="w-full p-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-2 rounded-lg" readonly>
         <input [(ngModel)]="newMember.cargo" placeholder="Cargo" class="w-full p-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-4 rounded-lg">
         <div class="flex justify-end gap-2">
           <button (click)="closeModal()" class="px-4 py-2 border rounded-lg text-slate-600 dark:text-slate-300">Cancelar</button>
