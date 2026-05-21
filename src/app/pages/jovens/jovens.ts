@@ -36,7 +36,11 @@ export class JovensComponent implements OnInit {
     window.open(link, '_blank');
   }
 
-  eventosPendentes = computed(() => this.data.eventos().filter(e => !e.realizado));
+  eventosPendentes = computed(() => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    return this.data.eventos().filter(e => !e.realizado && new Date(e.data) >= hoje);
+  });
   
   newJovem = {
     nome: '',

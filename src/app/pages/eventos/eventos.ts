@@ -51,6 +51,11 @@ export class EventosComponent {
   }
 
   enviarAviso(eventoId: string) {
+    const evento = this.data.eventos().find(e => e.id === eventoId);
+    if (!evento || evento.realizado || this.isFinished(evento)) {
+        alert('Não é possível enviar aviso para um evento finalizado.');
+        return;
+    }
     this.router.navigate(['/jovens'], { queryParams: { avisoEvento: eventoId } });
   }
 
