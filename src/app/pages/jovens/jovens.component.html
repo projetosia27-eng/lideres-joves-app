@@ -259,10 +259,8 @@
             <label for="eventSelect" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Preencher com Evento (opcional)</label>
             <select id="eventSelect" (change)="selecionarEventoParaMensagem($event)" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
               <option value="">Selecione um evento para gerar a mensagem...</option>
-              @for(evento of data.eventos(); track evento.id) {
-                @if (!evento.realizado) {
-                  <option [value]="evento.id">{{ evento.nome }} ({{ evento.data | date:'dd/MM' }})</option>
-                }
+              @for(evento of eventosPendentes(); track evento.id) {
+                <option [value]="evento.id">{{ evento.nome }} ({{ evento.data | date:'dd/MM' }})</option>
               }
             </select>
           </div>
@@ -271,26 +269,13 @@
             <label for="msgTemplate" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Modelo de Mensagem</label>
             <textarea id="msgTemplate" [(ngModel)]="messageTemplate" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white min-h-[100px] resize-y" placeholder="Olá {{ '{' }}nome{{ '}' }}!"></textarea>
           </div>
-
-          <div class="flex-shrink-0">
-             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Banner (opcional)</label>
-             <input type="file" accept="image/*" (change)="onBannerSelected($event)" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
-             @if (bannerUrl()) {
-                <div class="mt-2 text-xs text-emerald-600">Banner pronto para envio!</div>
-             }
-          </div>
           
           <div class="mt-2 flex-1">
-            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider mb-3">Contatos ({{ filteredJovens().length }})</h3>
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider mb-3">Enviar Mensagem</h3>
             <div class="space-y-2">
-              <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 cursor-pointer">
-                <input type="checkbox" [checked]="selectedJovens().size === filteredJovens().length" (change)="toggleSelectAll()" class="w-4 h-4 rounded text-indigo-600">
-                Selecionar Todos ({{ filteredJovens().length }})
-              </label>
               @for(jovem of filteredJovens(); track jovem.id) {
-                <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-sm" [class.border-indigo-400]="selectedJovens().has(jovem.id)">
+                <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-sm">
                   <div class="flex items-center gap-3 overflow-hidden">
-                    <input type="checkbox" [checked]="selectedJovens().has(jovem.id)" (change)="toggleSelection(jovem.id)" class="w-4 h-4 rounded text-indigo-600">
                     <div class="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 shrink-0 overflow-hidden text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center">
                        @if(jovem.fotoUrl) {
                          <img [src]="jovem.fotoUrl" [alt]="'Foto de ' + jovem.nome" class="w-full h-full object-cover">
@@ -300,9 +285,9 @@
                     </div>
                     <div class="flex flex-col truncate">
                       <span class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{{ jovem.nome }}</span>
-                      <span class="text-xs text-slate-500 dark:text-slate-400">{{ jovem.telefone || 'Sem numero' }}</span>
                     </div>
                   </div>
+                  <button (click)="sendTo(jovem)" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">Enviar</button>
                 </div>
               }
             </div>
@@ -310,41 +295,16 @@
         </div>
         <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-end gap-3">
           <button (click)="showMessageModal.set(false)" class="px-6 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-full transition-colors">Fechar</button>
-          <button (click)="sendMessageToSelected()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-full transition-colors shadow-lg shadow-emerald-200 dark:shadow-none flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-            Gerar Links ({{ selectedJovens().size }})
-          </button>
         </div>
       </div>
     </div>
   }
 
-  <!-- Modal de Links de Envio -->
-  @if (showLinksModal()) {
     <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
            <h2 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-widest">Links de Envio</h2>
-           <button (click)="showLinksModal.set(false)" class="text-slate-400 hover:text-slate-600"><span class="material-symbols-outlined">close</span></button>
         </div>
-        <div class="p-6 overflow-y-auto max-h-[60vh] space-y-3">
-           <p class="text-xs text-slate-500 mb-4">Por limitações de segurança do navegador, clique em cada um abaixo para abrir o WhatsApp individualmente. <b>Nota: O WhatsApp não permite anexar imagens automaticamente via link, apenas o texto com o link da imagem (caso tenha configurado um banner).</b></p>
-           @for(j of getSelectedJovensLinks(); track j.id) {
-             <div class="flex flex-col gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700">
-               <div class="flex items-center justify-between">
-                 <span class="text-sm truncate font-semibold text-slate-700 dark:text-slate-200">{{ j.nome }}</span>
-                 <a [href]="j.link" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">Abrir WhatsApp</a>
-               </div>
-               <button (click)="copiarMensagem(j.mensagem)" class="w-full px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold rounded-lg hover:bg-indigo-200 flex items-center justify-center gap-2">
-                 <span class="material-symbols-outlined text-[14px]">content_copy</span>
-                 Copiar Mensagem e Banner
-               </button>
-             </div>
-           }
-        </div>
-      </div>
-    </div>
-  }
 
   <!-- Modal Excluir -->
   @if (jovemToDelete()) {

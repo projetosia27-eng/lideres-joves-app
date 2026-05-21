@@ -21,64 +21,23 @@ export class JovensComponent implements OnInit {
   imgbb = inject(ImgbbService);
   showModal = signal(false);
   showMessageModal = signal(false);
-  showLinksModal = signal(false);
   jovemToDelete = signal<string | null>(null);
-  selectedJovens = signal<Set<string>>(new Set());
+  
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
-  bannerUrl = signal<string | null>(null);
   dataNascimentoInput = '';
   
-  onBannerSelected(event: Event) {
-     const file = (event.target as HTMLInputElement).files?.[0];
-     if (!file) return;
-     const reader = new FileReader();
-     reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        this.imgbb.uploadImage(base64).then(url => {
-            this.bannerUrl.set(url);
-            this.cdr.detectChanges();
-        });
-     };
-     reader.readAsDataURL(file);
-  }
-
-  toggleSelection(id: string) {
-    const next = new Set(this.selectedJovens());
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    this.selectedJovens.set(next);
-  }
-
-  toggleSelectAll() {
-    if (this.selectedJovens().size === this.data.jovens().length) {
-      this.selectedJovens.set(new Set());
-    } else {
-      this.selectedJovens.set(new Set(this.data.jovens().map(j => j.id)));
+  sendTo(jovem: { nome: string; telefone: string | null }) {
+    if (!jovem.telefone) {
+        alert('Este jovem não possui telefone cadastrado.');
+        return;
     }
-  }
-  
-  sendMessageToSelected() {
-    this.showLinksModal.set(true);
-  }
-  
-  getSelectedJovensLinks() {
-     const selected = this.data.jovens().filter(j => this.selectedJovens().has(j.id));
-     const banner = this.bannerUrl() ? `\n\n${this.bannerUrl()}` : '';
-     return selected.filter(j => j.telefone).map(j => ({
-         id: j.id,
-         nome: j.nome,
-         mensagem: this.messageTemplate().replace('{nome}', j.nome) + banner,
-         link: this.getWhatsAppLink(j.telefone, j.nome) + encodeURIComponent(banner)
-     }));
+    const link = this.getWhatsAppLink(jovem.telefone, jovem.nome);
+    window.open(link, '_blank');
   }
 
-  copiarMensagem(mensagem: string) {
-     navigator.clipboard.writeText(mensagem).then(() => {
-         alert('Mensagem e link do banner copiados! Agora é só colar no WhatsApp.');
-     });
-  }
-
+  eventosPendentes = computed(() => this.data.eventos().filter(e => !e.realizado));
+  
   newJovem = {
     nome: '',
     idade: 18,
