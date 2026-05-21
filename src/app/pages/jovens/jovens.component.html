@@ -285,9 +285,13 @@
                     </div>
                     <div class="flex flex-col truncate">
                       <span class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{{ jovem.nome }}</span>
+                      <span class="text-xs text-slate-500 dark:text-slate-400">{{ jovem.telefone || 'Sem número' }}</span>
                     </div>
                   </div>
-                  <button (click)="sendTo(jovem)" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">Enviar</button>
+                  <button (click)="sendTo(jovem)" class="px-3 py-1.5 bg-emerald-600 text-white text-[10px] font-bold rounded-lg hover:bg-emerald-700 flex items-center gap-1.5 shrink-0">
+                    <span class="material-symbols-outlined text-[14px]">chat</span>
+                    Enviar WhatsApp
+                  </button>
                 </div>
               }
             </div>
