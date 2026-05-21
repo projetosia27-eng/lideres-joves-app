@@ -21,6 +21,7 @@ export class JovensComponent implements OnInit {
   imgbb = inject(ImgbbService);
   showModal = signal(false);
   showMessageModal = signal(false);
+  showLinksModal = signal(false);
   jovemToDelete = signal<string | null>(null);
   selectedJovens = signal<Set<string>>(new Set());
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
@@ -58,18 +59,17 @@ export class JovensComponent implements OnInit {
   }
   
   sendMessageToSelected() {
-    const selected = this.data.jovens().filter(j => this.selectedJovens().has(j.id));
-    let delay = 0;
-    const banner = this.bannerUrl() ? `\n\n${this.bannerUrl()}` : '';
-    
-    for (const j of selected) {
-       if (j.telefone) {
-         setTimeout(() => {
-            window.open(this.getWhatsAppLink(j.telefone, j.nome) + encodeURIComponent(banner), '_blank');
-         }, delay);
-         delay += 1500; // Small delay between tabs
-       }
-    }
+    this.showLinksModal.set(true);
+  }
+  
+  getSelectedJovensLinks() {
+     const selected = this.data.jovens().filter(j => this.selectedJovens().has(j.id));
+     const banner = this.bannerUrl() ? `\n\n${this.bannerUrl()}` : '';
+     return selected.filter(j => j.telefone).map(j => ({
+         id: j.id,
+         nome: j.nome,
+         link: this.getWhatsAppLink(j.telefone, j.nome) + encodeURIComponent(banner)
+     }));
   }
 
   newJovem = {
