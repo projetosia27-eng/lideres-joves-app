@@ -4,6 +4,17 @@ import { collection, doc, query, where, onSnapshot, setDoc, deleteDoc, updateDoc
 
 export type StatusScore = 'verde' | 'amarelo' | 'vermelho';
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  createdAt: unknown;
+  planType: 'trial' | 'anual' | 'vitalicio' | 'expired';
+  subscriptionExpiresAt: string | null;
+  paymentStatus: 'approved' | 'pending' | 'none';
+  paymentEmail?: string | null;
+  trialStartDate?: string | null;
+}
+
 export interface Jovem {
   id: string;
   userId: string;
@@ -142,6 +153,23 @@ export class DataService {
   public transacoes = signal<Transacao[]>([]);
   public diretoria = signal<DiretoriaMember[]>([]);
   public igreja = signal<Igreja | null>(null);
+  public userProfile = signal<UserProfile | null>(null);
+
+  public isSubscribed = computed(() => {
+    const profile = this.userProfile();
+    if (!profile) return true; // Evitar flickering durante o carregamento inicial
+
+    if (profile.planType === 'vitalicio') return true;
+    if (profile.planType === 'expired') return false;
+
+    if (profile.planType === 'anual' || profile.planType === 'trial') {
+      if (!profile.subscriptionExpiresAt) return true;
+      const expires = new Date(profile.subscriptionExpiresAt).getTime();
+      return expires > Date.now();
+    }
+
+    return false;
+  });
 
   private unsubJovens?: () => void;
   private unsubEventos?: () => void;
@@ -149,6 +177,7 @@ export class DataService {
   private unsubTransacoes?: () => void;
   private unsubDiretoria?: () => void;
   private unsubIgreja?: () => void;
+  private unsubUserProfile?: () => void;
 
   constructor() {
     auth.onAuthStateChanged(user => {
@@ -176,6 +205,35 @@ export class DataService {
 
   private subscribeToData(userId: string) {
     this.clearData();
+
+    const userRef = doc(db, 'users', userId);
+    this.unsubUserProfile = onSnapshot(userRef, snapshot => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        this.userProfile.set({
+          id: snapshot.id,
+          email: data['email'] || '',
+          createdAt: data['createdAt'] || null,
+          planType: data['planType'] || 'trial',
+          subscriptionExpiresAt: data['subscriptionExpiresAt'] || null,
+          paymentStatus: data['paymentStatus'] || 'none',
+          paymentEmail: data['paymentEmail'] || null,
+          trialStartDate: data['trialStartDate'] || null
+        } as UserProfile);
+      } else {
+        // Fallback robusto para usuários existentes que não têm o perfil de documento em si
+        this.userProfile.set({
+          id: userId,
+          email: auth.currentUser?.email || '',
+          createdAt: null,
+          planType: 'trial',
+          subscriptionExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          paymentStatus: 'none',
+          paymentEmail: auth.currentUser?.email || '',
+          trialStartDate: new Date().toISOString()
+        });
+      }
+    }, error => handleFirestoreError(error, OperationType.GET, 'users'));
 
     const jovensQuery = query(collection(db, 'jovens'), where('userId', '==', userId));
     this.unsubJovens = onSnapshot(jovensQuery, snapshot => {
@@ -233,12 +291,14 @@ export class DataService {
     if (this.unsubTransacoes) this.unsubTransacoes();
     if (this.unsubDiretoria) this.unsubDiretoria();
     if (this.unsubIgreja) this.unsubIgreja();
+    if (this.unsubUserProfile) this.unsubUserProfile();
     this.jovens.set([]);
     this.eventos.set([]);
     this.materiais.set([]);
     this.transacoes.set([]);
     this.diretoria.set([]);
     this.igreja.set(null);
+    this.userProfile.set(null);
   }
 
   public totalJovens = computed(() => this.jovens().length);
@@ -472,6 +532,32 @@ export class DataService {
     } catch (err) {
       console.error('DataService: error deleting member', err);
       handleFirestoreError(err, OperationType.DELETE, 'diretoria');
+    }
+  }
+
+  async updateSubscription(planType: 'trial' | 'anual' | 'vitalicio' | 'expired', paymentStatus: 'approved' | 'pending' | 'none', paymentEmail: string) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+    try {
+      const userRef = doc(db, 'users', userId);
+      let expiresAt: string | null = null;
+      if (planType === 'anual') {
+        expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 ano
+      } else if (planType === 'trial') {
+        expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 dias
+      } else if (planType === 'expired') {
+        expiresAt = new Date(Date.now() - 60000).toISOString(); // expirado há 1 minuto
+      }
+
+      await updateDoc(userRef, {
+        planType,
+        paymentStatus,
+        paymentEmail: paymentEmail || null,
+        subscriptionExpiresAt: expiresAt,
+        updatedAt: serverTimestamp()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'users');
     }
   }
 }

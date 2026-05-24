@@ -86,9 +86,16 @@ export class Login {
     const userRef = doc(db, 'users', user.uid);
     const snap = await getDoc(userRef);
     if (!snap.exists()) {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days from now
       await setDoc(userRef, {
         email: user.email,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        planType: 'trial',
+        trialStartDate: now.toISOString(),
+        subscriptionExpiresAt: expiresAt,
+        paymentStatus: 'none',
+        paymentEmail: user.email || ''
       });
     }
   }

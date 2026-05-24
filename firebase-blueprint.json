@@ -6,7 +6,12 @@
       "type": "object",
       "properties": {
         "email": { "type": "string" },
-        "createdAt": { "type": "timestamp" }
+        "createdAt": { "type": "timestamp" },
+        "planType": { "type": "string", "enum": ["trial", "anual", "vitalicio", "expired"] },
+        "trialStartDate": { "type": "string" },
+        "subscriptionExpiresAt": { "type": "string" },
+        "paymentStatus": { "type": "string", "enum": ["approved", "pending", "none"] },
+        "paymentEmail": { "type": "string" }
       },
       "required": ["email", "createdAt"]
     },

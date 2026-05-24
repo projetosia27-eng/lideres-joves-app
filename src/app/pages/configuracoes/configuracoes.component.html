@@ -110,4 +110,119 @@
       </button>
     </div>
   </div>
+
+  <!-- SEÇÃO DE ASSINATURA -->
+  <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+    <div class="p-6 sm:p-8 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+        <div class="flex items-center gap-4 cursor-pointer select-none focus:outline-none" (click)="logoClick()" (keyup.enter)="logoClick()" tabindex="0" role="button">
+          <div class="w-12 h-12 bg-amber-100 dark:bg-amber-500/20 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 transition-transform active:scale-95">
+            <span class="material-symbols-outlined text-2xl">workspace_premium</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Minha Assinatura</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Gerencie sua licença de uso do LideraJovem.</p>
+          </div>
+        </div>
+        <!-- Indicador de Status da Assinatura -->
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-sm" [ngClass]="subscriptionStatus.class">
+            <span class="w-2.5 h-2.5 rounded-full animate-pulse bg-current"></span>
+            Assinatura {{ subscriptionStatus.text }}
+          </span>
+        </div>
+      </div>
+
+      <!-- DETALHES DO PLANO ATUAL -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 dark:bg-[#060608]/40 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+        <div class="space-y-4">
+          <div>
+            <div class="text-xs text-slate-400 uppercase tracking-widest font-black">Plano Atual</div>
+            <div class="text-lg font-black text-slate-800 dark:text-white mt-1 flex items-center gap-2">
+              @if (data.userProfile()?.planType === 'anual') {
+                <span class="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded-full uppercase tracking-wider font-bold">Plano Anual Ativado</span>
+              } @else if (data.userProfile()?.planType === 'vitalicio') {
+                <span class="px-2.5 py-1 text-xs bg-emerald-600 text-white rounded-full uppercase tracking-wider font-bold">Plano Vitalício</span>
+              } @else if (data.userProfile()?.planType === 'trial') {
+                <span class="px-2.5 py-1 text-xs bg-amber-500 text-white rounded-full uppercase tracking-wider font-bold">Período de Teste</span>
+              } @else {
+                <span class="px-2.5 py-1 text-xs bg-rose-600 text-white rounded-full uppercase tracking-wider font-bold">Expirado / Encerrado</span>
+              }
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs text-slate-400 uppercase tracking-widest font-black">Validade / Expiração</div>
+            <div class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
+              @if (data.userProfile()?.subscriptionExpiresAt) {
+                {{ data.userProfile()?.subscriptionExpiresAt | date:'dd/MM/yyyy HH:mm' }}
+              } @else {
+                Sem limite de validade (Vitalício)
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700 pt-4 md:pt-0 md:pl-6">
+          <div>
+            <div class="text-xs text-slate-400 uppercase tracking-widest font-black">Status de Pagamento</div>
+            <div class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 flex items-center gap-1.5 font-mono">
+              @if (data.userProfile()?.paymentStatus === 'approved') {
+                <span class="text-emerald-500 flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Aprovado (Pago)</span>
+              } @else if (data.userProfile()?.paymentStatus === 'pending') {
+                <span class="text-amber-500 flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">pending</span> Aguardando (Pendente)</span>
+              } @else {
+                <span class="text-slate-500 flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">cancel</span> Nenhum</span>
+              }
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs text-slate-400 uppercase tracking-widest font-black">E-mail para Cobrança</div>
+            <div class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 break-all">
+              {{ data.userProfile()?.paymentEmail || 'Não definido' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINEL DE HOMOLOGAÇÃO / HOMOLOGATION BUTTONS -->
+      @if (showSimulator()) {
+        <div class="border border-dashed border-indigo-200 dark:border-indigo-500/20 rounded-2xl p-6 bg-indigo-50/10 dark:bg-indigo-500/5 mt-4 transition-all animate-fade-in">
+          <h3 class="text-sm font-mono font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">tune</span>
+            Painel de Homologação (Como Testar a Venda)
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+            Modulações do ciclo de vendas para fins de teste de aceitação do app. Troque abaixo para verificar como se comportam as permissões:
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button (click)="forceApproved()" 
+                    class="flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-indigo-600 text-white hover:bg-indigo-550 shadow transition-colors cursor-pointer flex items-center justify-center gap-1.5 hover:bg-indigo-500 border-0">
+              <span class="material-symbols-outlined text-[16px]">verified</span>
+              Simular Compra Aprovada
+            </button>
+            <button (click)="forceExpired()" 
+                    class="flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-rose-600 hover:bg-rose-500 text-white shadow transition-colors cursor-pointer flex items-center justify-center gap-1.5 border-0">
+              <span class="material-symbols-outlined text-[16px]">lock_clock</span>
+              Simular Expiração de Plano
+            </button>
+            <button (click)="forceTrial()" 
+                    class="flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">replay</span>
+              Reverter para Teste (7 dias)
+            </button>
+          </div>
+          
+          @if (simulatedMessage()) {
+            <div class="mt-4 text-xs font-semibold bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">info</span>
+              {{ simulatedMessage() }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
 </div>

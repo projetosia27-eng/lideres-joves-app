@@ -18,8 +18,9 @@ export class DiretoriaComponent {
     fotoUrl: ''
   };
 
-  onJovemSelected(event: any) {
-    const selectedJovemId = event.target.value;
+  onJovemSelected(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const selectedJovemId = target ? target.value : '';
     const jovem = this.data.jovens().find(j => j.id === selectedJovemId);
     if (jovem) {
       this.newMember.nome = jovem.nome;

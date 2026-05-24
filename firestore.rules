@@ -17,9 +17,13 @@ service cloud.firestore {
 
     function isValidUserCreate(data) {
       return data.keys().hasAll(['email', 'createdAt'])
-        && data.keys().size() == 2
         && data.email is string && data.email.size() <= 200
-        && data.createdAt == request.time;
+        && data.createdAt == request.time
+        && (!("planType" in data) || data.planType is string)
+        && (!("trialStartDate" in data) || data.trialStartDate is string)
+        && (!("subscriptionExpiresAt" in data) || data.subscriptionExpiresAt is string)
+        && (!("paymentStatus" in data) || data.paymentStatus is string)
+        && (!("paymentEmail" in data) || data.paymentEmail is string);
     }
 
     match /users/{userId} {
@@ -34,8 +38,15 @@ service cloud.firestore {
         
       allow update: if isSignedIn()
         && request.auth.uid == userId
-        && incoming().diff(existing()).affectedKeys().hasOnly(['email'])
-        && incoming().email is string && incoming().email.size() <= 200;
+        && (
+          incoming().diff(existing()).affectedKeys().hasAny(['email', 'planType', 'trialStartDate', 'subscriptionExpiresAt', 'paymentStatus', 'paymentEmail', 'updatedAt'])
+        )
+        && (!("email" in incoming()) || (incoming().email is string && incoming().email.size() <= 200))
+        && (!("planType" in incoming()) || incoming().planType is string)
+        && (!("trialStartDate" in incoming()) || incoming().trialStartDate is string)
+        && (!("subscriptionExpiresAt" in incoming()) || incoming().subscriptionExpiresAt is string || incoming().subscriptionExpiresAt == null)
+        && (!("paymentStatus" in incoming()) || incoming().paymentStatus is string)
+        && (!("paymentEmail" in incoming()) || incoming().paymentEmail is string || incoming().paymentEmail == null);
         
       allow delete: if false;
     }

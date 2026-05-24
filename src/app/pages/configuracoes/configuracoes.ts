@@ -27,6 +27,20 @@ export class ConfiguracoesComponent {
   themeService = inject(ThemeService);
   saving = signal(false);
   saved = signal(false);
+  simulatedMessage = signal('');
+  
+  clickCount = 0;
+  showSimulator = signal(false);
+
+  logoClick() {
+    this.clickCount++;
+    if (this.clickCount >= 5) {
+      this.showSimulator.set(true);
+      this.simulatedMessage.set('Modo do Desenvolvedor ativado! Painel de simulação liberado neste dispositivo.');
+      setTimeout(() => this.simulatedMessage.set(''), 4000);
+    }
+  }
+
   formData = {
     nome: '',
     endereco: '',
@@ -36,8 +50,49 @@ export class ConfiguracoesComponent {
   };
   router: Router;
 
+  get subscriptionStatus() {
+    const profile = this.data.userProfile();
+    if (!profile) {
+      return { text: 'Carregando...', class: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700' };
+    }
+
+    if (profile.paymentStatus === 'pending') {
+      return { text: 'Pendente', class: 'bg-amber-500/15 text-amber-600 dark:bg-amber-500/25 dark:text-amber-400 border border-amber-500/20' };
+    }
+
+    if (profile.planType === 'expired' || !this.data.isSubscribed()) {
+      return { text: 'Expirada', class: 'bg-rose-500/15 text-rose-600 dark:bg-rose-500/25 dark:text-rose-400 border border-rose-500/20' };
+    }
+
+    return { text: 'Ativa', class: 'bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-400 border border-emerald-500/20' };
+  }
+
+  async forceApproved() {
+    const email = this.data.userProfile()?.paymentEmail || auth.currentUser?.email || '';
+    await this.data.updateSubscription('anual', 'approved', email);
+    this.simulatedMessage.set('Simulação de compra concluída! Plano Anual ATIVADO por 365 dias.');
+    setTimeout(() => this.simulatedMessage.set(''), 4000);
+  }
+
+  async forceExpired() {
+    const email = this.data.userProfile()?.paymentEmail || auth.currentUser?.email || '';
+    await this.data.updateSubscription('expired', 'none', email);
+    this.simulatedMessage.set('Simulação concluída! Seu plano foi marcado como EXPIRADO. A tela de bloqueio foi engajada.');
+    setTimeout(() => this.simulatedMessage.set(''), 4000);
+  }
+
+  async forceTrial() {
+    const email = this.data.userProfile()?.paymentEmail || auth.currentUser?.email || '';
+    await this.data.updateSubscription('trial', 'none', email);
+    this.simulatedMessage.set('Simulação concluída! Conta revertida para o Período de Testes de 7 dias.');
+    setTimeout(() => this.simulatedMessage.set(''), 4000);
+  }
+
   constructor() {
     this.router = inject(Router);
+    if (typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.hostname.includes('ais-dev-') || window.location.hostname.includes('ais-pre-'))) {
+      this.showSimulator.set(true);
+    }
     effect(() => {
       const igreja = this.data.igreja();
       if (igreja) {
