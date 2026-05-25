@@ -632,15 +632,7 @@ export class App implements OnInit {
     this.paymentEmailMessage.set("");
     
     try {
-      // Resolve the host address dynamically
-      const apiBase = typeof window !== 'undefined' ? (
-        (window.location.hostname === 'localhost' || 
-         window.location.hostname === '127.0.0.1' || 
-         window.location.hostname.includes('ais-dev-') || 
-         window.location.hostname.includes('ais-pre-')) ? '' : 'https://ais-pre-yloueivdghacefv3aainrn-416664334311.us-east1.run.app'
-      ) : '';
-
-      const response = await fetch(`${apiBase}/api/mercado-pago/create-preference`, {
+      const response = await fetch('/api/mercado-pago/create-preference', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

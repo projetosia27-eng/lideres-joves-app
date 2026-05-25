@@ -4,14 +4,7 @@ import { Injectable } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class ImgbbService {
   async uploadImage(base64: string): Promise<string> {
-    const apiBase = typeof window !== 'undefined' ? (
-      (window.location.hostname === 'localhost' || 
-       window.location.hostname === '127.0.0.1' || 
-       window.location.hostname.includes('ais-dev-') || 
-       window.location.hostname.includes('ais-pre-')) ? '' : 'https://ais-pre-yloueivdghacefv3aainrn-416664334311.us-east1.run.app'
-    ) : '';
-
-    const response = await fetch(`${apiBase}/api/upload`, {
+    const response = await fetch('/api/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
