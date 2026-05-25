@@ -48,7 +48,7 @@ export class ConfiguracoesComponent {
     instagram: '',
     logoUrl: null as string | null
   };
-  router: Router;
+  router = inject(Router);
 
   get subscriptionStatus() {
     const profile = this.data.userProfile();
@@ -89,7 +89,6 @@ export class ConfiguracoesComponent {
   }
 
   constructor() {
-    this.router = inject(Router);
     if (typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.hostname.includes('ais-dev-') || window.location.hostname.includes('ais-pre-'))) {
       this.showSimulator.set(true);
     }

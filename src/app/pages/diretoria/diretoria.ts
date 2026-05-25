@@ -1,12 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { DataService, DiretoriaMember } from '../../data.service';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-diretoria',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   templateUrl: './diretoria.component.html'
 })
 export class DiretoriaComponent {

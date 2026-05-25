@@ -188,7 +188,7 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
     const topic = req.query['topic'] || req.body.type;
     // O Webhook do MercadoPago pode enviar tanto topic quanto type 
     if (topic === 'payment' || req.body.action === 'payment.created' || req.body.type === 'payment') {
-      let paymentId = req.query['id'] || req.body.data?.id;
+      const paymentId = req.query['id'] || req.body.data?.id;
       
       if (paymentId) {
         const token = process.env['MERCADOPAGO_ACCESS_TOKEN'];
@@ -214,7 +214,7 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
                 // (vitalício não expira)
 
                 // Executar update
-                const updateData: any = {
+                const updateData: Record<string, unknown> = {
                   planType: planType,
                   paymentStatus: 'approved',
                   paymentEmail: paymentInfo.payer?.email || null,
@@ -222,9 +222,9 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
                 };
                 
                 if (expiresAt) {
-                  updateData.subscriptionExpiresAt = expiresAt.toISOString();
+                  updateData['subscriptionExpiresAt'] = expiresAt.toISOString();
                 } else {
-                  updateData.subscriptionExpiresAt = null;
+                  updateData['subscriptionExpiresAt'] = null;
                 }
                 
                 await userRef.update(updateData);
