@@ -6,6 +6,30 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
+import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+import * as admin from 'firebase-admin';
+
+// Initialize Firebase Admin for Webhooks
+let firestoreDb: admin.firestore.Firestore | null = null;
+try {
+  if (process.env['FIREBASE_SERVICE_ACCOUNT_KEY']) {
+    const serviceAccountJson = Buffer.from(process.env['FIREBASE_SERVICE_ACCOUNT_KEY'], 'base64').toString('utf-8');
+    const serviceAccount = JSON.parse(serviceAccountJson);
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    }
+  } else {
+    // Attempt default initialization
+    if (!admin.apps.length) {
+       admin.initializeApp();
+    }
+  }
+  firestoreDb = admin.firestore();
+} catch (error) {
+  console.warn('Firebase Admin não pôde ser inicializado. Webhooks podem não conseguir atualizar o Firestore.', error);
+}
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -82,6 +106,142 @@ app.post('/api/upload', async (req, res) => {
  * });
  * ```
  */
+
+/**
+ * Handle Mercado Pago Create Preference
+ */
+app.post('/api/mercado-pago/create-preference', async (req, res) => {
+  try {
+    const { userId, planType, email } = req.body;
+    
+    if (!userId || !planType) {
+      res.status(400).json({ error: 'userId and planType are required' });
+      return;
+    }
+
+    const token = process.env['MERCADOPAGO_ACCESS_TOKEN'];
+    if (!token) {
+      throw new Error('MERCADOPAGO_ACCESS_TOKEN não está configurado.');
+    }
+
+    const client = new MercadoPagoConfig({ accessToken: token });
+    const preference = new Preference(client);
+
+    // Configurar o plano
+    let title = 'Assinatura LideraJovem';
+    let price = 0;
+    
+    if (planType === 'anual') {
+      title = 'LideraJovem - Plano Anual';
+      price = 97.00;
+    } else if (planType === 'vitalicio') {
+      title = 'LideraJovem - Acesso Vitalício';
+      price = 297.00;
+    } else {
+      res.status(400).json({ error: 'planType inválido' });
+      return;
+    }
+
+    const appUrl = process.env['APP_URL'] || req.headers.referer || 'http://localhost:3000/';
+
+    // Cria a preferência de checkout
+    const prefResult = await preference.create({
+      body: {
+        items: [
+          {
+            id: planType,
+            title: title,
+            quantity: 1,
+            unit_price: price,
+            currency_id: 'BRL',
+          }
+        ],
+        payer: {
+          email: email || '',
+        },
+        metadata: {
+          user_id: userId,
+          plan_type: planType
+        },
+        back_urls: {
+          success: `${appUrl}dashboard?pagamento=sucesso`,
+          failure: `${appUrl}dashboard?pagamento=falha`,
+          pending: `${appUrl}dashboard?pagamento=pendente`
+        },
+        auto_return: 'approved',
+        notification_url: `${appUrl}api/mercado-pago/webhook` // Webhook configurado
+      }
+    });
+
+    res.json({ init_point: prefResult.init_point, id: prefResult.id });
+  } catch (err: unknown) {
+    console.error('Error creating MercadoPago preference:', err);
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
+
+/**
+ * Handle Mercado Pago Webhook
+ */
+app.post('/api/mercado-pago/webhook', async (req, res) => {
+  try {
+    const topic = req.query['topic'] || req.body.type;
+    // O Webhook do MercadoPago pode enviar tanto topic quanto type 
+    if (topic === 'payment' || req.body.action === 'payment.created' || req.body.type === 'payment') {
+      let paymentId = req.query['id'] || req.body.data?.id;
+      
+      if (paymentId) {
+        const token = process.env['MERCADOPAGO_ACCESS_TOKEN'];
+        if (token && firestoreDb) {
+           const client = new MercadoPagoConfig({ accessToken: token });
+           const paymentClient = new Payment(client);
+           
+           // Buscar informações detalhadas do pagamento
+           const paymentInfo = await paymentClient.get({ id: String(paymentId) });
+           
+           if (paymentInfo.status === 'approved') {
+              const userId = paymentInfo.metadata?.user_id;
+              const planType = paymentInfo.metadata?.plan_type;
+              
+              if (userId && planType) {
+                // Atualizar Firestore para aprovar o usuário (Liberar aplicativo)
+                const userRef = firestoreDb.collection('users').doc(userId);
+                
+                let expiresAt: Date | null = null;
+                if (planType === 'anual') {
+                  expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 ano
+                }
+                // (vitalício não expira)
+
+                // Executar update
+                const updateData: any = {
+                  planType: planType,
+                  paymentStatus: 'approved',
+                  paymentEmail: paymentInfo.payer?.email || null,
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (expiresAt) {
+                  updateData.subscriptionExpiresAt = expiresAt.toISOString();
+                } else {
+                  updateData.subscriptionExpiresAt = null;
+                }
+                
+                await userRef.update(updateData);
+                console.log(`Pagamento Mercado Pago Aprovado: Usuário ${userId} liberado (${planType}).`);
+              }
+           }
+        }
+      }
+    }
+    
+    // Sempre retornar 200 pro MP
+    res.status(200).send('OK');
+  } catch (err: unknown) {
+    console.error('Error handling MercadoPago webhook:', err);
+    res.status(200).send('OK, but error processed internally'); // Retorna 200 pra evitar retrys agressivos do MP
+  }
+});
 
 /**
  * Serve static files from /browser

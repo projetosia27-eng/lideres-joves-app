@@ -358,16 +358,19 @@ import { CommonModule } from "@angular/common";
                   </ul>
 
                   <!-- BUTTON COMPRAR MERCADO PAGO -->
-                  <a
-                    href="https://www.mercadopago.com.br"
-                    target="_blank"
-                    class="mt-6 w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 text-white font-black text-center text-sm shadow-md hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                  <button
+                    (click)="abrirCheckoutMercadoPago()"
+                    [disabled]="carregandoCheckout()"
+                    class="mt-6 w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 disabled:from-indigo-400 disabled:to-indigo-400 text-white font-black text-center text-sm shadow-md hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer border-none"
                   >
-                    <span class="material-symbols-outlined text-[20px]"
-                      >shopping_cart</span
-                    >
-                    COMPRAR PLANO ANUAL NO MERCADO PAGO
-                  </a>
+                    @if (carregandoCheckout()) {
+                      <span class="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                      GERANDO PAGAMENTO...
+                    } @else {
+                      <span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+                      COMPRAR PLANO ANUAL NO MERCADO PAGO
+                    }
+                  </button>
                 </div>
 
                 <!-- EMAIL ATIVACAO FORM -->
@@ -617,6 +620,49 @@ export class App implements OnInit {
 
   clickCount = 0;
   showSimulator = signal(false);
+  carregandoCheckout = signal(false);
+
+  async abrirCheckoutMercadoPago() {
+    if (!this.data.userProfile()?.id) {
+       this.paymentEmailMessage.set("Erro: Usuário não identificado.");
+       return;
+    }
+    
+    this.carregandoCheckout.set(true);
+    this.paymentEmailMessage.set("");
+    
+    try {
+      const response = await fetch('/api/mercado-pago/create-preference', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: this.data.userProfile()?.id,
+          planType: 'anual',
+          email: this.userEmail() || this.paymentEmailInput
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.init_point) {
+         // Salva o email de pagamento na base pro webhook ser mais preciso se precisar
+         if (this.paymentEmailInput) {
+           this.syncPaymentEmail(); 
+         }
+         window.location.href = result.init_point;
+      } else {
+         console.error('Falha ao criar preferência MP:', result);
+         this.paymentEmailMessage.set("Erro ao gerar link de pagamento. Verifique as configurações (Token/App URL).");
+      }
+    } catch (err) {
+      console.error(err);
+      this.paymentEmailMessage.set("Erro na comunicação com o servidor de pagamento.");
+    } finally {
+      this.carregandoCheckout.set(false);
+    }
+  }
 
   logoClick() {
     this.clickCount++;
