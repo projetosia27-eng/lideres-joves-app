@@ -37,6 +37,20 @@ const app = express();
 // Add body parser for JSON (to accept base64 image data)
 app.use(express.json({ limit: '10mb' }));
 
+// Enable CORS for external access (e.g. from Vercel custom domains)
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  next();
+});
+
 const angularApp = new AngularNodeAppEngine({
   allowedHosts: ['*']
 });
@@ -112,7 +126,7 @@ app.post('/api/upload', async (req, res) => {
  */
 app.post('/api/mercado-pago/create-preference', async (req, res) => {
   try {
-    const { userId, planType, email } = req.body;
+    const { userId, planType, email, clientOrigin } = req.body;
     
     if (!userId || !planType) {
       res.status(400).json({ error: 'userId and planType are required' });
@@ -143,6 +157,13 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
     }
 
     const appUrl = process.env['APP_URL'] || req.headers.referer || 'http://localhost:3000/';
+    
+    // Choose the base redirection path (Vercel custom URL if available)
+    const redirectBase = clientOrigin || appUrl;
+    const redirectUrl = redirectBase.endsWith('/') ? redirectBase : `${redirectBase}/`;
+
+    // Construct the absolute address of this Express backend for the MP notification Webhook
+    const backendBaseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Cria a preferência de checkout
     const prefResult = await preference.create({
@@ -164,12 +185,12 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
           plan_type: planType
         },
         back_urls: {
-          success: `${appUrl}dashboard?pagamento=sucesso`,
-          failure: `${appUrl}dashboard?pagamento=falha`,
-          pending: `${appUrl}dashboard?pagamento=pendente`
+          success: `${redirectUrl}dashboard?pagamento=sucesso`,
+          failure: `${redirectUrl}dashboard?pagamento=falha`,
+          pending: `${redirectUrl}dashboard?pagamento=pendente`
         },
         auto_return: 'approved',
-        notification_url: `${appUrl}api/mercado-pago/webhook` // Webhook configurado
+        notification_url: `${backendBaseUrl}/api/mercado-pago/webhook` // Webhook always hits Cloud Run direct
       }
     });
 
