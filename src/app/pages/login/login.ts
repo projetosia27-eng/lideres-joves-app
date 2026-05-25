@@ -87,7 +87,7 @@ export class Login {
     const snap = await getDoc(userRef);
     if (!snap.exists()) {
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days from now
+      const expiresAt = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 days from now
       await setDoc(userRef, {
         email: user.email,
         createdAt: serverTimestamp(),

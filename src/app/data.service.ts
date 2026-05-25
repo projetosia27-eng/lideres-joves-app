@@ -210,27 +210,53 @@ export class DataService {
     this.unsubUserProfile = onSnapshot(userRef, snapshot => {
       if (snapshot.exists()) {
         const data = snapshot.data();
+        const planType = data['planType'] || 'trial';
+        let subscriptionExpiresAt = data['subscriptionExpiresAt'] || null;
+        
+        // Determinar a data exata de entrada no sistema (trialStartDate ou createdAt)
+        const rawCreatedAt = data['createdAt'];
+        let startIso = data['trialStartDate'] || null;
+        if (!startIso && rawCreatedAt) {
+          if (typeof rawCreatedAt.toDate === 'function') {
+            startIso = rawCreatedAt.toDate().toISOString();
+          } else if (rawCreatedAt.seconds) {
+            startIso = new Date(rawCreatedAt.seconds * 1000).toISOString();
+          } else {
+            startIso = new Date(rawCreatedAt).toISOString();
+          }
+        }
+        if (!startIso) {
+          startIso = new Date().toISOString();
+        }
+
+        // Se o plano for trial (Período de Testes), forçamos exatamente 5 dias após entrar no sistema
+        if (planType === 'trial') {
+          subscriptionExpiresAt = new Date(new Date(startIso).getTime() + 5 * 24 * 60 * 60 * 1000).toISOString();
+        }
+
         this.userProfile.set({
           id: snapshot.id,
           email: data['email'] || '',
           createdAt: data['createdAt'] || null,
-          planType: data['planType'] || 'trial',
-          subscriptionExpiresAt: data['subscriptionExpiresAt'] || null,
+          planType: planType,
+          subscriptionExpiresAt: subscriptionExpiresAt,
           paymentStatus: data['paymentStatus'] || 'none',
-          paymentEmail: data['paymentEmail'] || null,
-          trialStartDate: data['trialStartDate'] || null
+          paymentEmail: data['email'] || data['paymentEmail'] || '',
+          trialStartDate: startIso
         } as UserProfile);
       } else {
         // Fallback robusto para usuários existentes que não têm o perfil de documento em si
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString();
         this.userProfile.set({
           id: userId,
           email: auth.currentUser?.email || '',
           createdAt: null,
           planType: 'trial',
-          subscriptionExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          subscriptionExpiresAt: expiresAt,
           paymentStatus: 'none',
           paymentEmail: auth.currentUser?.email || '',
-          trialStartDate: new Date().toISOString()
+          trialStartDate: now.toISOString()
         });
       }
     }, error => handleFirestoreError(error, OperationType.GET, 'users'));
@@ -544,7 +570,7 @@ export class DataService {
       if (planType === 'anual') {
         expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 ano
       } else if (planType === 'trial') {
-        expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 dias
+        expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 dias (antes era 7)
       } else if (planType === 'expired') {
         expiresAt = new Date(Date.now() - 60000).toISOString(); // expirado há 1 minuto
       }

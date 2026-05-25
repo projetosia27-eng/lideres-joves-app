@@ -68,23 +68,23 @@ export class ConfiguracoesComponent {
   }
 
   async forceApproved() {
-    const email = this.data.userProfile()?.paymentEmail || auth.currentUser?.email || '';
+    const email = this.data.userProfile()?.email || auth.currentUser?.email || '';
     await this.data.updateSubscription('anual', 'approved', email);
     this.simulatedMessage.set('Simulação de compra concluída! Plano Anual ATIVADO por 365 dias.');
     setTimeout(() => this.simulatedMessage.set(''), 4000);
   }
 
   async forceExpired() {
-    const email = this.data.userProfile()?.paymentEmail || auth.currentUser?.email || '';
+    const email = this.data.userProfile()?.email || auth.currentUser?.email || '';
     await this.data.updateSubscription('expired', 'none', email);
     this.simulatedMessage.set('Simulação concluída! Seu plano foi marcado como EXPIRADO. A tela de bloqueio foi engajada.');
     setTimeout(() => this.simulatedMessage.set(''), 4000);
   }
 
   async forceTrial() {
-    const email = this.data.userProfile()?.paymentEmail || auth.currentUser?.email || '';
+    const email = this.data.userProfile()?.email || auth.currentUser?.email || '';
     await this.data.updateSubscription('trial', 'none', email);
-    this.simulatedMessage.set('Simulação concluída! Conta revertida para o Período de Testes de 7 dias.');
+    this.simulatedMessage.set('Simulação concluída! Conta revertida para o Período de Testes de 5 dias.');
     setTimeout(() => this.simulatedMessage.set(''), 4000);
   }
 
