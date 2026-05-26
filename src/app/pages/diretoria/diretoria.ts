@@ -11,6 +11,8 @@ import { FormsModule } from '@angular/forms';
 export class DiretoriaComponent {
   data = inject(DataService);
   showModal = signal(false);
+  isEditing = signal(false);
+  editingMemberId = signal('');
   newMember: Omit<DiretoriaMember, 'id' | 'userId' | 'createdAt'> = {
     nome: '',
     cargo: '',
@@ -28,8 +30,21 @@ export class DiretoriaComponent {
   }
 
   openModal() {
+    this.isEditing.set(false);
+    this.editingMemberId.set('');
     this.showModal.set(true);
     this.newMember = { nome: '', cargo: '', fotoUrl: '' };
+  }
+
+  editMember(membro: DiretoriaMember) {
+    this.isEditing.set(true);
+    this.editingMemberId.set(membro.id);
+    this.newMember = {
+      nome: membro.nome,
+      cargo: membro.cargo,
+      fotoUrl: membro.fotoUrl || ''
+    };
+    this.showModal.set(true);
   }
 
   closeModal() {
@@ -38,7 +53,13 @@ export class DiretoriaComponent {
 
   save() {
     if (!this.newMember.nome || !this.newMember.cargo) return;
-    this.data.addDiretoriaMember(this.newMember);
+    
+    if (this.isEditing()) {
+      this.data.updateDiretoriaMember(this.editingMemberId(), this.newMember);
+    } else {
+      this.data.addDiretoriaMember(this.newMember);
+    }
+    
     this.closeModal();
   }
 

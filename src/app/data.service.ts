@@ -561,6 +561,18 @@ export class DataService {
     }
   }
 
+  async updateDiretoriaMember(id: string, updates: Partial<DiretoriaMember>) {
+    console.log('DataService: updating member with id:', id, updates);
+    try {
+      const dataToUpdate = { ...updates };
+      delete dataToUpdate.id; // avoid writing id to document if it exists in the payload
+      await updateDoc(doc(db, 'diretoria', id), dataToUpdate);
+    } catch (err) {
+      console.error('DataService: error updating member', err);
+      handleFirestoreError(err, OperationType.UPDATE, 'diretoria');
+    }
+  }
+
   async updateSubscription(planType: 'trial' | 'anual' | 'vitalicio' | 'expired', paymentStatus: 'approved' | 'pending' | 'none', paymentEmail: string) {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
