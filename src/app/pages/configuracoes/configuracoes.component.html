@@ -225,4 +225,85 @@
       }
     </div>
   </div>
+
+  <!-- SEÇÃO DE INTEGRAÇÕES & OAUTH -->
+  <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+    <div class="p-6 sm:p-8 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+            <span class="material-symbols-outlined text-2xl font-bold">api</span>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Integração OAuth</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">URLs de redirecionamento para integração com provedores de autenticação (Google, GitHub, etc).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          Se você estiver realizando integrações com login via redes sociais ou outras APIs externas que requerem autenticação por terceiros, utilize as seguintes URLs de redirecionamento (Redirect URIs) nas configurações do seu provedor correspondente para habilitar o fluxo completo de autenticação:
+        </p>
+
+        <div class="space-y-4 pt-2">
+          <!-- Firebase Auth URL -->
+          <div class="p-4 bg-slate-50 dark:bg-[#060608]/40 border border-slate-100 dark:border-slate-700/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <span class="text-xs font-black uppercase tracking-wider text-amber-500 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">local_fire_department</span>
+                Firebase Authentication Handler (Google Login)
+              </span>
+              <p class="text-xs text-slate-500 dark:text-slate-400">URL obrigatória de callback configurada no Google Cloud Console para o Firebase Auth funcionar.</p>
+              <code class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 break-all bg-indigo-50/50 dark:bg-indigo-950/20 px-2 py-1 rounded">https://gen-lang-client-0647760479.firebaseapp.com/__/auth/handler</code>
+            </div>
+            <button (click)="copyToClipboard('https://gen-lang-client-0647760479.firebaseapp.com/__/auth/handler', 'firebase')" 
+                    class="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 self-start md:self-center border-0 cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">content_copy</span>
+              {{ copiedText() === 'firebase' ? 'Copiado!' : 'Copiar URL' }}
+            </button>
+          </div>
+
+          <!-- Development App URL -->
+          <div class="p-4 bg-slate-50 dark:bg-[#060608]/40 border border-slate-100 dark:border-slate-700/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <span class="text-xs font-black uppercase tracking-wider text-indigo-500 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">terminal</span>
+                Ambiente de Desenvolvimento (AI Studio Dev)
+              </span>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Usado para fluxos OAuth de teste no seu container de preview atual.</p>
+              <code class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 break-all bg-indigo-50/50 dark:bg-indigo-950/20 px-2 py-1 rounded">https://ais-dev-yloueivdghacefv3aainrn-416664334311.us-east1.run.app/auth/callback</code>
+            </div>
+            <button (click)="copyToClipboard('https://ais-dev-yloueivdghacefv3aainrn-416664334311.us-east1.run.app/auth/callback', 'dev')" 
+                    class="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 self-start md:self-center border-0 cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">content_copy</span>
+              {{ copiedText() === 'dev' ? 'Copiado!' : 'Copiar URL' }}
+            </button>
+          </div>
+
+          <!-- Shared App URL -->
+          <div class="p-4 bg-slate-50 dark:bg-[#060608]/40 border border-slate-100 dark:border-slate-700/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <span class="text-xs font-black uppercase tracking-wider text-emerald-500 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">public</span>
+                Ambiente de Produção (Shared Deployed App)
+              </span>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Usado para fluxos OAuth quando os usuários acessam seu aplicativo publicado ou compartilhado.</p>
+              <code class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 break-all bg-indigo-50/50 dark:bg-indigo-950/20 px-2 py-1 rounded">https://ais-pre-yloueivdghacefv3aainrn-416664334311.us-east1.run.app/auth/callback</code>
+            </div>
+            <button (click)="copyToClipboard('https://ais-pre-yloueivdghacefv3aainrn-416664334311.us-east1.run.app/auth/callback', 'prod')" 
+                    class="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 self-start md:self-center border-0 cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">content_copy</span>
+              {{ copiedText() === 'prod' ? 'Copiado!' : 'Copiar URL' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-2 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-medium">
+          <span class="material-symbols-outlined text-[16px]">info</span>
+          Lembre-se de configurar as credenciais OAuth aplicáveis (ex: CLIENT_ID, CLIENT_SECRET) na seção correspondente de seu provedor de identidade.
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

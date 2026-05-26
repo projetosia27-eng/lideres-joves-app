@@ -30,9 +30,9 @@ export class DiretoriaComponent {
   }
 
   openModal() {
+    this.showModal.set(true);
     this.isEditing.set(false);
     this.editingMemberId.set('');
-    this.showModal.set(true);
     this.newMember = { nome: '', cargo: '', fotoUrl: '' };
   }
 
@@ -53,13 +53,11 @@ export class DiretoriaComponent {
 
   save() {
     if (!this.newMember.nome || !this.newMember.cargo) return;
-    
     if (this.isEditing()) {
       this.data.updateDiretoriaMember(this.editingMemberId(), this.newMember);
     } else {
       this.data.addDiretoriaMember(this.newMember);
     }
-    
     this.closeModal();
   }
 

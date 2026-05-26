@@ -28,6 +28,35 @@ export class ConfiguracoesComponent {
   saving = signal(false);
   saved = signal(false);
   simulatedMessage = signal('');
+  copiedText = signal('');
+
+  copyToClipboard(text: string, label: string) {
+    if (typeof window !== 'undefined') {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.copiedText.set(label);
+          setTimeout(() => this.copiedText.set(''), 3000);
+        }).catch(err => {
+          console.error('Erro ao copiar', err);
+        });
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          this.copiedText.set(label);
+          setTimeout(() => this.copiedText.set(''), 3000);
+        } catch (err) {
+          console.error('Fallback: Erro ao copiar', err);
+        }
+        document.body.removeChild(textArea);
+      }
+    }
+  }
   
   clickCount = 0;
   showSimulator = signal(false);

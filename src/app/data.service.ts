@@ -562,13 +562,11 @@ export class DataService {
   }
 
   async updateDiretoriaMember(id: string, updates: Partial<DiretoriaMember>) {
-    console.log('DataService: updating member with id:', id, updates);
     try {
       const dataToUpdate = { ...updates };
-      delete dataToUpdate.id; // avoid writing id to document if it exists in the payload
+      delete dataToUpdate.id; // avoid writing id to document
       await updateDoc(doc(db, 'diretoria', id), dataToUpdate);
     } catch (err) {
-      console.error('DataService: error updating member', err);
       handleFirestoreError(err, OperationType.UPDATE, 'diretoria');
     }
   }
