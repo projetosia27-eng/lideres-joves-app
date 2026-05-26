@@ -147,10 +147,10 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
     
     if (planType === 'anual') {
       title = 'LideraJovem - Plano Anual';
-      price = 97.00;
+      price = 1.00;
     } else if (planType === 'vitalicio') {
       title = 'LideraJovem - Acesso Vitalício';
-      price = 297.00;
+      price = 1.00;
     } else {
       res.status(400).json({ error: 'planType inválido' });
       return;

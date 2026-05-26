@@ -309,7 +309,7 @@ import { CommonModule } from "@angular/common";
                       <div
                         class="font-black text-2xl text-slate-800 dark:text-white"
                       >
-                        R$ 119,90<span
+                        R$ 1,00<span
                           class="text-xs font-normal text-slate-500"
                           >/ano</span
                         >
@@ -317,7 +317,7 @@ import { CommonModule } from "@angular/common";
                       <div
                         class="text-[11px] text-slate-500 dark:text-slate-400"
                       >
-                        Equivale a menos de R$ 10,00 por mês!
+                        Preço especial para teste de pagamento!
                       </div>
                     </div>
                   </div>
