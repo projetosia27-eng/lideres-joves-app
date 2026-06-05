@@ -38,8 +38,44 @@ module.exports = async function handler(req, res) {
       if (paymentId) {
         const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
         const firestoreDb = getFirestoreDb();
+        const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
         
         if (token && firestoreDb) {
+           // Opcional: Validar a assinatura se a chave secreta de webhook estiver configurada
+           if (webhookSecret) {
+             const xSignature = req.headers['x-signature'];
+             const requestId = req.headers['x-request-id'] || req.headers['x-request-id-header'] || '';
+             
+             if (!xSignature) {
+               console.error('Assinatura x-signature ausente.');
+               return res.status(444).send('Signature missing'); 
+             }
+
+             let ts = '';
+             let v1 = '';
+             xSignature.split(',').forEach(part => {
+               const index = part.indexOf('=');
+               if (index !== -1) {
+                 const k = part.substring(0, index).trim();
+                 const v = part.substring(index + 1).trim();
+                 if (k === 'ts') ts = v;
+                 if (k === 'v1') v1 = v;
+               }
+             });
+
+             const crypto = require('crypto');
+             // Opcional/v1 - O Mercado Pago assina o evento combinando o ID do recurso, request-id, e timestamp (ts)
+             const manifest = `id:${paymentId};request-id:${requestId};ts:${ts};`;
+             const computedSignature = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+
+             if (computedSignature !== v1) {
+               console.error('Assinatura do webhook inválida. Recebida:', v1, 'Calculada:', computedSignature);
+               // Retornamos 200 para o Mercado Pago não travar, mas não processamos o pagamento fraudulento
+               return res.status(200).send('Invalid Signature');
+             }
+             console.log('Assinatura do webhook Mercado Pago autenticada com sucesso!');
+           }
+
            const client = new MercadoPagoConfig({ accessToken: token });
            const paymentClient = new Payment(client);
            
