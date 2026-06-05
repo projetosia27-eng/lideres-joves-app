@@ -209,7 +209,7 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
     const topic = req.query['topic'] || req.body.type;
     // O Webhook do MercadoPago pode enviar tanto topic quanto type 
     if (topic === 'payment' || req.body.action === 'payment.created' || req.body.type === 'payment') {
-      const paymentId = req.query['id'] || req.body.data?.id;
+      const paymentId = req.query['id'] || req.query['data.id'] || req.body.data?.id || req.body.id;
       
       if (paymentId) {
         const token = process.env['MERCADOPAGO_ACCESS_TOKEN'];
@@ -221,10 +221,10 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
            const paymentInfo = await paymentClient.get({ id: String(paymentId) });
            
            if (paymentInfo.status === 'approved') {
-              const userId = paymentInfo.metadata?.user_id;
-              const planType = paymentInfo.metadata?.plan_type;
+              const userId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
+              const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
               
-              if (userId && planType) {
+              if (userId) {
                 // Atualizar Firestore para aprovar o usuário (Liberar aplicativo)
                 const userRef = firestoreDb.collection('users').doc(userId);
                 
@@ -232,9 +232,8 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
                 if (planType === 'anual') {
                   expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 ano
                 }
-                // (vitalício não expira)
 
-                // Executar update
+                // Executar set com merge para ser ultra robusto
                 const updateData: Record<string, unknown> = {
                   planType: planType,
                   paymentStatus: 'approved',
@@ -248,8 +247,8 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
                   updateData['subscriptionExpiresAt'] = null;
                 }
                 
-                await userRef.update(updateData);
-                console.log(`Pagamento Mercado Pago Aprovado: Usuário ${userId} liberado (${planType}).`);
+                await userRef.set(updateData, { merge: true });
+                console.log(`Pagamento Mercado Pago Aprovado (Webhook): Usuário ${userId} liberado (${planType}).`);
               }
            }
         }
@@ -261,6 +260,88 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
   } catch (err: unknown) {
     console.error('Error handling MercadoPago webhook:', err);
     res.status(200).send('OK, but error processed internally'); // Retorna 200 pra evitar retrys agressivos do MP
+  }
+});
+
+/**
+ * Handle Mercado Pago payment instant check verification
+ */
+app.post('/api/mercado-pago/verify', async (req, res) => {
+  try {
+    const { paymentId, userId } = req.body;
+
+    if (!paymentId) {
+      res.status(400).json({ error: 'paymentId is required' });
+      return;
+    }
+
+    const token = process.env['MERCADOPAGO_ACCESS_TOKEN'];
+    if (!token) {
+      res.status(500).json({ error: 'MERCADOPAGO_ACCESS_TOKEN não está configurado.' });
+      return;
+    }
+
+    if (!firestoreDb) {
+      res.status(500).json({ error: 'Firestore não está disponível no servidor.' });
+      return;
+    }
+
+    const client = new MercadoPagoConfig({ accessToken: token });
+    const paymentClient = new Payment(client);
+
+    console.log(`[Verify Express] Buscando dados do pagamento ID ${paymentId}...`);
+    const paymentInfo = await paymentClient.get({ id: String(paymentId) });
+
+    if (paymentInfo.status === 'approved') {
+      const payUserId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
+      const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
+
+      const targetUserId = userId || payUserId;
+
+      if (!targetUserId) {
+        res.status(400).json({ error: 'Não foi possível identificar o userId para este pagamento.' });
+        return;
+      }
+
+      const userRef = firestoreDb.collection('users').doc(targetUserId);
+
+      let expiresAt: Date | null = null;
+      if (planType === 'anual') {
+        expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 ano
+      }
+
+      const updateData: Record<string, unknown> = {
+        planType: planType,
+        paymentStatus: 'approved',
+        paymentEmail: paymentInfo.payer?.email || null,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (expiresAt) {
+        updateData['subscriptionExpiresAt'] = expiresAt.toISOString();
+      } else {
+        updateData['subscriptionExpiresAt'] = null;
+      }
+
+      await userRef.set(updateData, { merge: true });
+      console.log(`[Verify Express] Pagamento Aprovado: Usuário ${targetUserId} liberado (${planType}).`);
+
+      res.json({
+        success: true,
+        message: 'Pagamento verificado e ativado com sucesso!',
+        planType,
+        userId: targetUserId
+      });
+    } else {
+      res.json({
+        success: false,
+        status: paymentInfo.status,
+        message: `O status do pagamento é: ${paymentInfo.status}`
+      });
+    }
+  } catch (err: unknown) {
+    console.error('Error verifying MercadoPago payment:', err);
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
   }
 });
 

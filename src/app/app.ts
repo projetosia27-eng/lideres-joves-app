@@ -258,203 +258,222 @@ import { CommonModule } from "@angular/common";
               <div
                 class="flex flex-col items-center justify-center max-w-2xl mx-auto py-8 px-4 text-center"
               >
-                <div
-                  (click)="logoClick()"
-                  (keyup.enter)="logoClick()"
-                  tabindex="0"
-                  role="button"
-                  class="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center mb-6 animate-pulse cursor-pointer select-none active:scale-95 transition-transform focus:outline-none"
-                >
-                  <span class="material-symbols-outlined text-[36px]"
-                    >lock_clock</span
-                  >
-                </div>
-
-                <h2
-                  (click)="logoClick()"
-                  (keyup.enter)="logoClick()"
-                  tabindex="0"
-                  role="button"
-                  class="font-display font-black text-3xl tracking-tight text-slate-800 dark:text-white mb-3 cursor-pointer select-none focus:outline-none"
-                >
-                  Seu Período de Testes Expirou
-                </h2>
-                <p
-                  class="text-slate-600 dark:text-slate-400 mb-8 max-w-md text-sm sm:text-base"
-                >
-                  Para continuar organizando a diretoria, as presenças dos
-                  jovens e o controle financeiro da sua igreja, adquira a nossa
-                  assinatura anual.
-                </p>
-
-                <!-- CARD DO PLANO -->
-                <div
-                  class="w-full bg-gradient-to-br from-indigo-50 to-fuchsia-50 dark:from-slate-800/40 dark:to-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-6 mb-8 text-left shadow-lg"
-                >
+                @if (verificandoPagamento()) {
+                  <div class="w-full bg-gradient-to-br from-indigo-50/50 to-fuchsia-50/50 dark:from-indigo-500/5 dark:to-fuchsia-500/5 border-2 border-indigo-500/30 dark:border-indigo-500/20 rounded-3xl p-8 mb-8 text-center shadow-xl animate-pulse">
+                    <div class="w-20 h-20 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-6">
+                      <span class="material-symbols-outlined text-[44px] animate-spin">sync</span>
+                    </div>
+                    <h3 class="font-display font-black text-2xl text-slate-800 dark:text-white mb-2 uppercase tracking-tight">
+                      Sincronizando Pagamento...
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 max-w-md mx-auto text-sm">
+                      Estamos confirmando seu pagamento de R$ 1,00 diretamente na API segura do Mercado Pago. O seu acesso será liberado em instantes!
+                    </p>
+                    @if (paymentEmailMessage()) {
+                      <div class="mt-5 text-xs font-bold font-mono px-4 py-2 bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-xl max-w-sm mx-auto">
+                        {{ paymentEmailMessage() }}
+                      </div>
+                    }
+                  </div>
+                } @else {
                   <div
-                    class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4"
+                    (click)="logoClick()"
+                    (keyup.enter)="logoClick()"
+                    tabindex="0"
+                    role="button"
+                    class="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center mb-6 animate-pulse cursor-pointer select-none active:scale-95 transition-transform focus:outline-none"
                   >
-                    <div>
-                      <span
-                        class="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full"
-                        >Melhor Valor</span
-                      >
-                      <h4
-                        class="font-bold text-xl text-slate-800 dark:text-white mt-1.5"
-                      >
-                        Plano Anual LideraJovem
-                      </h4>
-                    </div>
-                    <div class="sm:text-right">
-                      <div
-                        class="font-black text-2xl text-slate-800 dark:text-white"
-                      >
-                        R$ 1,00<span
-                          class="text-xs font-normal text-slate-500"
-                          >/ano</span
-                        >
-                      </div>
-                      <div
-                        class="text-[11px] text-slate-500 dark:text-slate-400"
-                      >
-                        Preço especial para teste de pagamento!
-                      </div>
-                    </div>
+                    <span class="material-symbols-outlined text-[36px]"
+                      >lock_clock</span
+                    >
                   </div>
 
-                  <hr class="border-slate-200 dark:border-white/5 my-4" />
-
-                  <ul
-                    class="space-y-3 text-sm text-slate-600 dark:text-slate-300"
+                  <h2
+                    (click)="logoClick()"
+                    (keyup.enter)="logoClick()"
+                    tabindex="0"
+                    role="button"
+                    class="font-display font-black text-3xl tracking-tight text-slate-800 dark:text-white mb-3 cursor-pointer select-none focus:outline-none"
                   >
-                    <li class="flex items-center gap-2.5">
-                      <span
-                        class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
-                        >check_circle</span
-                      >
-                      Painel de presença interativa (Chamada) ilimitada
-                    </li>
-                    <li class="flex items-center gap-2.5">
-                      <span
-                        class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
-                        >check_circle</span
-                      >
-                      Controle financeiro integrado (Entradas/Saídas)
-                    </li>
-                    <li class="flex items-center gap-2.5">
-                      <span
-                        class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
-                        >check_circle</span
-                      >
-                      Biblioteca de materiais, esboços e PDFs para estudos
-                    </li>
-                    <li class="flex items-center gap-2.5">
-                      <span
-                        class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
-                        >check_circle</span
-                      >
-                      Sistemas de alertas de risco/engajamento dos jovens
-                    </li>
-                  </ul>
-
-                  <!-- BUTTON COMPRAR MERCADO PAGO -->
-                  <button
-                    (click)="abrirCheckoutMercadoPago()"
-                    [disabled]="carregandoCheckout()"
-                    class="mt-6 w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 disabled:from-indigo-400 disabled:to-indigo-400 text-white font-black text-center text-sm shadow-md hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer border-none"
+                    Seu Período de Testes Expirou
+                  </h2>
+                  <p
+                    class="text-slate-600 dark:text-slate-400 mb-8 max-w-md text-sm sm:text-base"
                   >
-                    @if (carregandoCheckout()) {
-                      <span class="material-symbols-outlined text-[20px] animate-spin">sync</span>
-                      GERANDO PAGAMENTO...
-                    } @else {
-                      <span class="material-symbols-outlined text-[20px]">shopping_cart</span>
-                      COMPRAR PLANO ANUAL NO MERCADO PAGO
-                    }
-                  </button>
-                </div>
-
-                <!-- EMAIL ATIVACAO FORM -->
-                <div
-                  class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 mb-8 text-left shadow-sm"
-                >
-                  <h4
-                    class="font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-1.5 text-sm uppercase tracking-wider"
-                  >
-                    <span
-                      class="material-symbols-outlined text-[18px] text-indigo-600 dark:text-indigo-400"
-                      >sync</span
-                    >
-                    Já efetuou o pagamento?
-                  </h4>
-                  <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                    Se você realizou o pagamento com outro e-mail no Mercado
-                    Pago, digite ele aqui para buscar e sincronizar sua
-                    liberação:
+                    Para continuar organizando a diretoria, as presenças dos
+                    jovens e o controle financeiro da sua igreja, adquira a nossa
+                    assinatura anual.
                   </p>
 
-                  <div class="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="email"
-                      placeholder="E-mail usado no Mercado Pago"
-                      [(ngModel)]="paymentEmailInput"
-                      class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#060608]/40 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
-                    />
-                    <button
-                      (click)="syncPaymentEmail()"
-                      class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  <!-- CARD DO PLANO -->
+                  <div
+                    class="w-full bg-gradient-to-br from-indigo-50 to-fuchsia-50 dark:from-slate-800/40 dark:to-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-6 mb-8 text-left shadow-lg"
+                  >
+                    <div
+                      class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4"
                     >
-                      Sincronizar
+                      <div>
+                        <span
+                          class="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full"
+                          >Melhor Valor</span
+                        >
+                        <h4
+                          class="font-bold text-xl text-slate-800 dark:text-white mt-1.5"
+                        >
+                          Plano Anual LideraJovem
+                        </h4>
+                      </div>
+                      <div class="sm:text-right">
+                        <div
+                          class="font-black text-2xl text-slate-800 dark:text-white"
+                        >
+                          R$ 1,00<span
+                            class="text-xs font-normal text-slate-500"
+                            >/ano</span
+                          >
+                        </div>
+                        <div
+                          class="text-[11px] text-slate-500 dark:text-slate-400"
+                        >
+                          Preço especial para teste de pagamento!
+                        </div>
+                      </div>
+                    </div>
+
+                    <hr class="border-slate-200 dark:border-white/5 my-4" />
+
+                    <ul
+                      class="space-y-3 text-sm text-slate-600 dark:text-slate-300"
+                    >
+                      <li class="flex items-center gap-2.5">
+                        <span
+                          class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
+                          >check_circle</span
+                        >
+                        Painel de presença interativa (Chamada) ilimitada
+                      </li>
+                      <li class="flex items-center gap-2.5">
+                        <span
+                          class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
+                          >check_circle</span
+                        >
+                        Controle financeiro integrado (Entradas/Saídas)
+                      </li>
+                      <li class="flex items-center gap-2.5">
+                        <span
+                          class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
+                          >check_circle</span
+                        >
+                        Biblioteca de materiais, esboços e PDFs para estudos
+                      </li>
+                      <li class="flex items-center gap-2.5">
+                        <span
+                          class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]"
+                          >check_circle</span
+                        >
+                        Sistemas de alertas de risco/engajamento dos jovens
+                      </li>
+                    </ul>
+
+                    <!-- BUTTON COMPRAR MERCADO PAGO -->
+                    <button
+                      (click)="abrirCheckoutMercadoPago()"
+                      [disabled]="carregandoCheckout()"
+                      class="mt-6 w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 disabled:from-indigo-400 disabled:to-indigo-400 text-white font-black text-center text-sm shadow-md hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer border-none"
+                    >
+                      @if (carregandoCheckout()) {
+                        <span class="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                        GERANDO PAGAMENTO...
+                      } @else {
+                        <span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+                        COMPRAR PLANO ANUAL NO MERCADO PAGO
+                      }
                     </button>
                   </div>
-                  @if (paymentEmailMessage()) {
-                    <div
-                      class="mt-3 text-xs bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-lg border border-emerald-500/20 font-medium"
-                    >
-                      {{ paymentEmailMessage() }}
-                    </div>
-                  }
-                </div>
 
-                <!-- SIMULATOR CONTROL (HOW TO TEST) -->
-                @if (showSimulator()) {
+                  <!-- EMAIL ATIVACAO FORM -->
                   <div
-                    class="w-full border border-dashed border-indigo-400/50 dark:border-indigo-500/30 rounded-3xl p-6 bg-indigo-50/10 dark:bg-indigo-500/5 text-left transition-all animate-fade-in mt-4"
+                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 mb-8 text-left shadow-sm"
                   >
                     <h4
-                      class="font-bold text-indigo-700 dark:text-indigo-300 mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider font-mono"
+                      class="font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-1.5 text-sm uppercase tracking-wider"
                     >
-                      <span class="material-symbols-outlined text-[18px]"
-                        >tune</span
+                      <span
+                        class="material-symbols-outlined text-[18px] text-indigo-600 dark:text-indigo-400"
+                        >sync</span
                       >
-                      Painel de Simulação (Homologação / Como Testar)
+                      Já efetuou o pagamento?
                     </h4>
-                    <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">
-                      Este painel simula instantaneamente os webhooks do Mercado
-                      Pago para sua conta no Firestore, ideal para testar telas
-                      bloqueadas ou liberadas na tomada de decisão:
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                      Se você realizou o pagamento com outro e-mail no Mercado
+                      Pago, digite ele aqui para buscar e sincronizar sua
+                      liberação:
                     </p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="email"
+                        placeholder="E-mail usado no Mercado Pago"
+                        [(ngModel)]="paymentEmailInput"
+                        class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#060608]/40 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                      />
                       <button
-                        (click)="simulateApprovedPayment()"
-                        class="py-3 px-4 rounded-xl border border-indigo-500/20 bg-indigo-600 text-white hover:bg-indigo-540 cursor-pointer text-white font-black text-xs uppercase tracking-wide shadow-md transition-all flex items-center justify-center gap-1.5 hover:bg-indigo-500"
+                        (click)="syncPaymentEmail()"
+                        class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
                       >
-                        <span class="material-symbols-outlined text-[16px]"
-                          >verified</span
-                        >
-                        Simular Compra Aprovada
-                      </button>
-                      <button
-                        (click)="simulatePendingPayment()"
-                        class="py-3 px-4 rounded-xl border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold text-xs uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <span class="material-symbols-outlined text-[16px]"
-                          >pending</span
-                        >
-                        Simular Compra Pendente
+                        Sincronizar
                       </button>
                     </div>
+                    @if (paymentEmailMessage()) {
+                      <div
+                        class="mt-3 text-xs bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-lg border border-emerald-500/20 font-medium"
+                      >
+                        {{ paymentEmailMessage() }}
+                      </div>
+                    }
                   </div>
+
+                  <!-- SIMULATOR CONTROL (HOW TO TEST) -->
+                  @if (showSimulator()) {
+                    <div
+                      class="w-full border border-dashed border-indigo-400/50 dark:border-indigo-500/30 rounded-3xl p-6 bg-indigo-50/10 dark:bg-indigo-500/5 text-left transition-all animate-fade-in mt-4"
+                    >
+                      <h4
+                        class="font-bold text-indigo-700 dark:text-indigo-300 mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider font-mono"
+                      >
+                        <span class="material-symbols-outlined text-[18px]"
+                          >tune</span
+                        >
+                        Painel de Simulação (Homologação / Como Testar)
+                      </h4>
+                      <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">
+                        Este painel simula instantaneamente os webhooks do Mercado
+                        Pago para sua conta no Firestore, ideal para testar telas
+                        bloqueadas ou liberadas na tomada de decisão:
+                      </p>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          (click)="simulateApprovedPayment()"
+                          class="py-3 px-4 rounded-xl border border-indigo-500/20 bg-indigo-600 text-white hover:bg-indigo-540 cursor-pointer text-white font-black text-xs uppercase tracking-wide shadow-md transition-all flex items-center justify-center gap-1.5 hover:bg-indigo-500"
+                        >
+                          <span class="material-symbols-outlined text-[16px]"
+                            >verified</span
+                          >
+                          Simular Compra Aprovada
+                        </button>
+                        <button
+                          (click)="simulatePendingPayment()"
+                          class="py-3 px-4 rounded-xl border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold text-xs uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <span class="material-symbols-outlined text-[16px]"
+                            >pending</span
+                          >
+                          Simular Compra Pendente
+                        </button>
+                      </div>
+                    </div>
+                  }
                 }
               </div>
             }
@@ -621,6 +640,7 @@ export class App implements OnInit {
   clickCount = 0;
   showSimulator = signal(false);
   carregandoCheckout = signal(false);
+  verificandoPagamento = signal(false);
 
   async abrirCheckoutMercadoPago() {
     if (!this.data.userProfile()?.id) {
@@ -650,7 +670,7 @@ export class App implements OnInit {
       if (response.ok && result.init_point) {
          // Salva o email de pagamento na base pro webhook ser mais preciso se precisar
          if (this.paymentEmailInput) {
-           this.syncPaymentEmail(); 
+            this.syncPaymentEmail(); 
          }
          window.location.href = result.init_point;
       } else {
@@ -686,6 +706,19 @@ export class App implements OnInit {
     ) {
       this.showSimulator.set(true);
     }
+
+    // Sincronizar retorno de redirecionamento de checkout do Mercado Pago
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pagamento = params.get('pagamento');
+      const paymentId = params.get('payment_id') || params.get('collection_id');
+      const status = params.get('status') || params.get('collection_status');
+
+      if ((pagamento === 'sucesso' || status === 'approved') && paymentId) {
+        this.verificarDadosDoPagamento(paymentId);
+      }
+    }
+
     auth.onAuthStateChanged((user) => {
       this.isAuthenticated.set(!!user);
       if (user?.email) {
@@ -696,6 +729,70 @@ export class App implements OnInit {
         this.paymentEmailInput = "";
       }
     });
+  }
+
+  async verificarDadosDoPagamento(paymentId: string) {
+    if (this.verificandoPagamento()) return;
+    this.verificandoPagamento.set(true);
+    this.paymentEmailMessage.set("Entrando em contato com o Mercado Pago para liberar seu acesso...");
+
+    // Esperar um pouco até que o userProfile esteja autenticado/carregado na inicialização
+    let attempts = 0;
+    while (!this.data.userProfile()?.id && attempts < 12) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      attempts++;
+    }
+
+    const userId = this.data.userProfile()?.id;
+
+    try {
+      console.log(`[Verify client] Enviando requisição para verificar pagamento ${paymentId}`);
+      const response = await fetch('/api/mercado-pago/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          paymentId,
+          userId
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        this.paymentEmailMessage.set("Pagamento autorizado e plano ANUAL ativado com sucesso!");
+        
+        // Limpar os parâmetros de pagamento de forma sutil da URL para evitar requisições duplicadas
+        setTimeout(() => {
+          this.router.navigate([], {
+            queryParams: {
+              pagamento: null,
+              collection_id: null,
+              collection_status: null,
+              payment_id: null,
+              status: null,
+              external_reference: null,
+              payment_type: null,
+              merchant_order_id: null,
+              preference_id: null,
+              site_id: null,
+              processing_mode: null,
+              merchant_account_id: null
+            },
+            queryParamsHandling: 'merge'
+          });
+        }, 1500);
+      } else {
+        console.warn('Sincronização de pagamento retornou status não-aprovado:', result);
+        this.paymentEmailMessage.set("Pagamento localizado! Está aguardando compensação do banco.");
+      }
+    } catch (err) {
+      console.error('Falha ao verificar transação do MP:', err);
+      this.paymentEmailMessage.set("Conexão rápida: buscando dados de compensação. Por favor sincronize manualmente se não liberar.");
+    } finally {
+      this.verificandoPagamento.set(false);
+      setTimeout(() => this.paymentEmailMessage.set(""), 6000);
+    }
   }
 
   toggleMobileMenu() {
