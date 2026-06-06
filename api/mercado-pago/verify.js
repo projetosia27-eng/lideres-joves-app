@@ -62,7 +62,7 @@ module.exports = async function handler(req, res) {
     const paymentInfo = await paymentClient.get({ id: String(paymentId) });
 
     if (paymentInfo.status === 'approved') {
-      const payUserId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
+      const payUserId = paymentInfo.external_reference || paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
       const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
 
       // Use the provided userId as a fallback if metadata didn't register it

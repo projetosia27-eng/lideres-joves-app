@@ -736,14 +736,22 @@ export class App implements OnInit {
     this.verificandoPagamento.set(true);
     this.paymentEmailMessage.set("Entrando em contato com o Mercado Pago para liberar seu acesso...");
 
-    // Esperar um pouco até que o userProfile esteja autenticado/carregado na inicialização
-    let attempts = 0;
-    while (!this.data.userProfile()?.id && attempts < 12) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      attempts++;
+    let urlUserId: string | null = null;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      urlUserId = params.get('external_reference');
     }
 
-    const userId = this.data.userProfile()?.id;
+    // Esperar um pouco até que o userProfile esteja autenticado/carregado na inicialização se não houver na URL
+    if (!urlUserId) {
+      let attempts = 0;
+      while (!this.data.userProfile()?.id && attempts < 12) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+    }
+
+    const userId = this.data.userProfile()?.id || urlUserId;
 
     try {
       console.log(`[Verify client] Enviando requisição para verificar pagamento ${paymentId}`);
