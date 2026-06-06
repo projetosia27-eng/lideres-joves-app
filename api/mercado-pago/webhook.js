@@ -81,10 +81,10 @@ module.exports = async function handler(req, res) {
            const paymentInfo = await paymentClient.get({ id: String(paymentId) });
            
            if (paymentInfo.status === 'approved') {
-              const userId = paymentInfo.external_reference || paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
-              const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
+              const userId = paymentInfo.metadata?.user_id;
+              const planType = paymentInfo.metadata?.plan_type;
               
-              if (userId) {
+              if (userId && planType) {
                 // Atualizar Firestore para aprovar o usuário (Liberar aplicativo)
                 const userRef = firestoreDb.collection('users').doc(userId);
                 

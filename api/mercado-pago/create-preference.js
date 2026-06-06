@@ -60,7 +60,6 @@ module.exports = async function handler(req, res) {
         payer: {
           email: email || undefined
         },
-        external_reference: userId,
         metadata: {
           user_id: userId,
           plan_type: planType
@@ -75,10 +74,7 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    const isSandbox = token.startsWith('TEST-');
-    const checkoutUrl = isSandbox ? (prefResult.sandbox_init_point || prefResult.init_point) : prefResult.init_point;
-
-    return res.json({ init_point: checkoutUrl, id: prefResult.id });
+    return res.json({ init_point: prefResult.init_point, id: prefResult.id });
   } catch (err) {
     console.error('Erro ao gerar preferência Mercado Pago:', err);
     return res.status(500).json({ error: 'Falha ao processar pagamento.', details: err.message });

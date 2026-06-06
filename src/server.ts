@@ -180,7 +180,6 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
         payer: {
           email: email || '',
         },
-        external_reference: userId,
         metadata: {
           user_id: userId,
           plan_type: planType
@@ -195,10 +194,7 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
       }
     });
 
-    const isSandbox = token.startsWith('TEST-');
-    const checkoutUrl = isSandbox ? (prefResult.sandbox_init_point || prefResult.init_point) : prefResult.init_point;
-
-    res.json({ init_point: checkoutUrl, id: prefResult.id });
+    res.json({ init_point: prefResult.init_point, id: prefResult.id });
   } catch (err: unknown) {
     console.error('Error creating MercadoPago preference:', err);
     res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
@@ -225,7 +221,7 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
            const paymentInfo = await paymentClient.get({ id: String(paymentId) });
            
            if (paymentInfo.status === 'approved') {
-              const userId = paymentInfo.external_reference || paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
+              const userId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
               const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
               
               if (userId) {
@@ -297,7 +293,7 @@ app.post('/api/mercado-pago/verify', async (req, res) => {
     const paymentInfo = await paymentClient.get({ id: String(paymentId) });
 
     if (paymentInfo.status === 'approved') {
-      const payUserId = paymentInfo.external_reference || paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
+      const payUserId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
       const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
 
       const targetUserId = userId || payUserId;
