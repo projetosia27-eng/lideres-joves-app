@@ -156,7 +156,15 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
       return;
     }
 
-    const appUrl = process.env['APP_URL'] || req.headers.referer || 'http://localhost:3000/';
+    let refererOrigin = 'http://localhost:3000/';
+    if (req.headers.referer) {
+      try {
+        refererOrigin = new URL(req.headers.referer).origin;
+      } catch {
+        refererOrigin = req.headers.referer;
+      }
+    }
+    const appUrl = process.env['APP_URL'] || refererOrigin;
     
     // Choose the base redirection path (Vercel custom URL if available)
     const redirectBase = clientOrigin || appUrl;

@@ -696,26 +696,6 @@ export class App implements OnInit {
     }
   }
 
-  clearPaymentQueryParams() {
-    this.router.navigate([], {
-      queryParams: {
-        pagamento: null,
-        collection_id: null,
-        collection_status: null,
-        payment_id: null,
-        status: null,
-        external_reference: null,
-        payment_type: null,
-        merchant_order_id: null,
-        preference_id: null,
-        site_id: null,
-        processing_mode: null,
-        merchant_account_id: null
-      },
-      queryParamsHandling: 'merge'
-    });
-  }
-
   ngOnInit() {
     if (
       typeof window !== "undefined" &&
@@ -736,12 +716,6 @@ export class App implements OnInit {
 
       if ((pagamento === 'sucesso' || status === 'approved') && paymentId) {
         this.verificarDadosDoPagamento(paymentId);
-      } else if (pagamento === 'falha' || status === 'rejected' || status === 'cancelled') {
-        this.paymentEmailMessage.set("Pagamento recusado ou cancelado. Por favor, tente novamente.");
-        setTimeout(() => this.clearPaymentQueryParams(), 1500);
-      } else if (pagamento === 'pendente' || status === 'pending' || status === 'in_process') {
-        this.paymentEmailMessage.set("Pagamento pendente ou em análise. Assim que compensado, seu acesso será liberado.");
-        setTimeout(() => this.clearPaymentQueryParams(), 1500);
       }
     }
 
@@ -787,32 +761,37 @@ export class App implements OnInit {
       const result = await response.json();
       if (response.ok && result.success) {
         this.paymentEmailMessage.set("Pagamento autorizado e plano ANUAL ativado com sucesso!");
+        
+        // Limpar os parâmetros de pagamento de forma sutil da URL para evitar requisições duplicadas
         setTimeout(() => {
-          this.clearPaymentQueryParams();
+          this.router.navigate([], {
+            queryParams: {
+              pagamento: null,
+              collection_id: null,
+              collection_status: null,
+              payment_id: null,
+              status: null,
+              external_reference: null,
+              payment_type: null,
+              merchant_order_id: null,
+              preference_id: null,
+              site_id: null,
+              processing_mode: null,
+              merchant_account_id: null
+            },
+            queryParamsHandling: 'merge'
+          });
         }, 1500);
       } else {
         console.warn('Sincronização de pagamento retornou status não-aprovado:', result);
-        const st = result.status || '';
-        if (st === 'rejected' || st === 'cancelled') {
-          this.paymentEmailMessage.set("Pagamento recusado ou cancelado pelo Mercado Pago. Por favor, tente novamente.");
-        } else if (st === 'pending' || st === 'in_process') {
-          this.paymentEmailMessage.set("Seu pagamento está pendente de processamento. Assim que for compensado, seu acesso será liberado.");
-        } else {
-          this.paymentEmailMessage.set("Não conseguimos confirmar a aprovação deste pagamento. Por favor, tente de novo.");
-        }
-        setTimeout(() => {
-          this.clearPaymentQueryParams();
-        }, 2000);
+        this.paymentEmailMessage.set("Pagamento localizado! Está aguardando compensação do banco.");
       }
     } catch (err) {
       console.error('Falha ao verificar transação do MP:', err);
-      this.paymentEmailMessage.set("Não foi possível verificar seu pagamento automaticamente. Por favor sincronize manualmente.");
-      setTimeout(() => {
-        this.clearPaymentQueryParams();
-      }, 2000);
+      this.paymentEmailMessage.set("Conexão rápida: buscando dados de compensação. Por favor sincronize manualmente se não liberar.");
     } finally {
       this.verificandoPagamento.set(false);
-      setTimeout(() => this.paymentEmailMessage.set(""), 8000);
+      setTimeout(() => this.paymentEmailMessage.set(""), 6000);
     }
   }
 

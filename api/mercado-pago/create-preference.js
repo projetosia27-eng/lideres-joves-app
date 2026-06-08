@@ -34,7 +34,15 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'planType inválido' });
     }
 
-    const appUrl = process.env.APP_URL || req.headers.referer || 'http://localhost:3000/';
+    let refererOrigin = 'http://localhost:3000/';
+    if (req.headers.referer) {
+       try {
+         refererOrigin = new URL(req.headers.referer).origin;
+       } catch (e) {
+         refererOrigin = req.headers.referer;
+       }
+    }
+    const appUrl = process.env.APP_URL || refererOrigin;
     
     const redirectBase = clientOrigin || appUrl;
     const redirectUrl = redirectBase.endsWith('/') ? redirectBase : `${redirectBase}/`;
