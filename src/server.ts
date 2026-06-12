@@ -170,6 +170,9 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
     const redirectBase = clientOrigin || appUrl;
     const redirectUrl = redirectBase.endsWith('/') ? redirectBase : `${redirectBase}/`;
 
+    // Allow overriding the final success redirect (useful for forcing the public frontend)
+    const frontendSuccessUrl = process.env['FRONTEND_SUCCESS_URL'] || null;
+
     // Construct the absolute address of this Express backend for the MP notification Webhook
     const backendBaseUrl = `${req.protocol}://${req.get('host')}`;
 
@@ -193,7 +196,7 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
           plan_type: planType
         },
         back_urls: {
-          success: `${redirectUrl}dashboard?pagamento=sucesso`,
+          success: frontendSuccessUrl || `${redirectUrl}dashboard?pagamento=sucesso`,
           failure: `${redirectUrl}dashboard?pagamento=falha`,
           pending: `${redirectUrl}dashboard?pagamento=pendente`
         },
