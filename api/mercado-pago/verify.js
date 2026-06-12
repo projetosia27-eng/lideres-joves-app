@@ -136,8 +136,8 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ 
       error: 'Erro ao processar verificação de pagamento', 
       details: errorDetails,
-      firebaseInitialized: !!firestoreDb,
-      hasServiceAccountKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+      hasServiceAccountKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+      mercadopagoConfigured: !!process.env.MERCADOPAGO_ACCESS_TOKEN
     });
   }
 };
