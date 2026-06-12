@@ -43,14 +43,18 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+  +    console.log('[Verify] === INICIANDO HANDLER ===');
     const { paymentId, userId } = req.body;
+  +    console.log('[Verify] paymentId:', paymentId, 'userId:', userId);
 
     if (!paymentId) {
       return res.status(400).json({ error: 'paymentId is required' });
     }
 
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  +    console.log('[Verify] Token MP carregado:', !!token);
     const firestoreDb = getFirestoreDb();
+  +    console.log('[Verify] Firestore inicializado:', !!firestoreDb);
 
     if (!token) {
       return res.status(500).json({ error: 'MERCADOPAGO_ACCESS_TOKEN não configurado.' });
@@ -60,8 +64,10 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Firestore não inicializado.' });
     }
 
+  +    console.log('[Verify] Criando cliente MercadoPago...');
     const client = new MercadoPagoConfig({ accessToken: token });
     const paymentClient = new Payment(client);
+  +    console.log('[Verify] Cliente criado. Buscando pagamento...');
 
       console.log(`[Verify] Buscando dados seguros do pagamento ID ${paymentId} na API do Mercado Pago...`);
       const paymentInfo = await paymentClient.get({ id: String(paymentId) });
