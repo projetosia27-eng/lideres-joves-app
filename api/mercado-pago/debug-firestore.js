@@ -17,7 +17,8 @@ function initializeFirestore() {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-    return admin.firestore();
+    const firestoreDb = admin.firestore();
+    return { firestoreDb, serviceAccount };
   } catch (err) {
     console.error('[Debug Firestore] Falha ao inicializar Firestore:', err);
     throw err;
@@ -26,15 +27,16 @@ function initializeFirestore() {
 
 module.exports = async function handler(req, res) {
   try {
-    const firestoreDb = initializeFirestore();
+    const { firestoreDb, serviceAccount } = initializeFirestore();
     const collections = await firestoreDb.listCollections();
-    const projectId = firestoreDb.app.options.projectId || firestoreDb.app.options.credential?.projectId;
+    const projectId = firestoreDb.app.options.projectId || firestoreDb.app.options.credential?.projectId || serviceAccount.project_id;
 
     return res.status(200).json({
       status: 'ok',
       collections: collections.slice(0, 10).map((c) => c.id),
       hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
       projectId: projectId || null,
+      serviceAccountEmail: serviceAccount.client_email || null,
       adminAppCount: admin.apps.length
     });
   } catch (error) {
@@ -43,11 +45,13 @@ module.exports = async function handler(req, res) {
       message: error.message,
       stack: error.stack,
       name: error.name,
-      code: error.code
+      code: error.code,
+      details: error.details || null
     } : { value: String(error) };
     return res.status(500).json({
       status: 'error',
-      error: errorDetails
+      error: errorDetails,
+      hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY
     });
   }
 };
