@@ -12,6 +12,8 @@ function initializeFirestore() {
 
     const serviceAccountJson = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8');
     const serviceAccount = JSON.parse(serviceAccountJson);
+    console.log('[Debug Firestore] serviceAccount project_id:', serviceAccount.project_id || '(missing)');
+    console.log('[Debug Firestore] serviceAccount client_email:', serviceAccount.client_email || '(missing)');
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
