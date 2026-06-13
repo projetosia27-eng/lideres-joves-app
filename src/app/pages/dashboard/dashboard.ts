@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject, OnInit } from '@angular/core';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { DataService, StatusScore } from '../../data.service';
+import { auth } from '../../firebase';
 
 @Component({
   selector: 'app-dashboard',
@@ -9,8 +11,38 @@ import { DataService, StatusScore } from '../../data.service';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   data = inject(DataService);
+  route = inject(ActivatedRoute);
+  router = inject(Router);
+  http = inject(HttpClient);
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      const pagamento = params['pagamento'];
+      const paymentId = params['payment_id'];
+      const status = params['status'];
+      
+      if (pagamento === 'sucesso' && paymentId && status === 'approved') {
+        const userId = this.data.userProfile()?.id || auth.currentUser?.uid;
+        if (userId) {
+          // verify in backend
+          this.http.post('/api/mercado-pago/verify', { paymentId, userId }).subscribe({
+             next: (res: any) => {
+                if (res.success) {
+                   // Successfully verified
+                   // Remove query parameters to avoid re-triggering
+                   this.router.navigate([], { queryParams: {}, replaceUrl: true });
+                }
+             },
+             error: err => {
+                console.error('Error verifying payment:', err);
+             }
+          });
+        }
+      }
+    });
+  }
 
   getInitials(name: string): string {
     const parts = name.split(' ');

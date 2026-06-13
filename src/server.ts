@@ -13,25 +13,22 @@ import * as admin from 'firebase-admin';
 let firestoreDb: admin.firestore.Firestore | null = null;
 try {
   if (process.env['FIREBASE_SERVICE_ACCOUNT_KEY']) {
-    console.log('[Firebase Init Express] Detectada FIREBASE_SERVICE_ACCOUNT_KEY em base64. Decodificando...');
     const serviceAccountJson = Buffer.from(process.env['FIREBASE_SERVICE_ACCOUNT_KEY'], 'base64').toString('utf-8');
     const serviceAccount = JSON.parse(serviceAccountJson);
-    console.log('[Firebase Init Express] Credenciais parseadas. Project ID:', serviceAccount.project_id);
     if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
-      console.log('[Firebase Init Express] Admin SDK inicializado com sucesso');
     }
   } else {
-    console.warn('[Firebase Init Express] FIREBASE_SERVICE_ACCOUNT_KEY não encontrada. Tentando inicialização default...');
+    // Attempt default initialization
     if (!admin.apps.length) {
        admin.initializeApp();
     }
   }
   firestoreDb = admin.firestore();
 } catch (error) {
-  console.error('[Firebase Init Express] Erro ao inicializar Firebase:', error);
+  console.warn('Firebase Admin não pôde ser inicializado. Webhooks podem não conseguir atualizar o Firestore.', error);
 }
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -173,9 +170,6 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
     const redirectBase = clientOrigin || appUrl;
     const redirectUrl = redirectBase.endsWith('/') ? redirectBase : `${redirectBase}/`;
 
-    // Allow overriding the final success redirect (useful for forcing the public frontend)
-    const frontendSuccessUrl = process.env['FRONTEND_SUCCESS_URL'] || null;
-
     // Construct the absolute address of this Express backend for the MP notification Webhook
     const backendBaseUrl = `${req.protocol}://${req.get('host')}`;
 
@@ -199,7 +193,7 @@ app.post('/api/mercado-pago/create-preference', async (req, res) => {
           plan_type: planType
         },
         back_urls: {
-          success: frontendSuccessUrl || `${redirectUrl}dashboard?pagamento=sucesso`,
+          success: `${redirectUrl}dashboard?pagamento=sucesso`,
           failure: `${redirectUrl}dashboard?pagamento=falha`,
           pending: `${redirectUrl}dashboard?pagamento=pendente`
         },
@@ -235,29 +229,13 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
            const paymentInfo = await paymentClient.get({ id: String(paymentId) });
            
            if (paymentInfo.status === 'approved') {
-              const metadataUserId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
+              const userId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
               const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
-              let targetUserId = metadataUserId || null;
-              const payerEmail = paymentInfo.payer?.email || null;
-
-              if (!targetUserId && payerEmail) {
-                try {
-                  const q = await firestoreDb.collection('users').where('email', '==', payerEmail).limit(1).get();
-                  if (!q.empty) {
-                    targetUserId = q.docs[0].id;
-                    console.log(`[Webhook] encontrado usuário por email ${payerEmail}: ${targetUserId}`);
-                  } else {
-                    console.warn(`[Webhook] nenhum usuário encontrado com email ${payerEmail}`);
-                  }
-                } catch (err) {
-                  console.error('[Webhook] erro ao buscar usuário por email:', err);
-                }
-              }
-
-              if (targetUserId) {
+              
+              if (userId) {
                 // Atualizar Firestore para aprovar o usuário (Liberar aplicativo)
-                const userRef = firestoreDb.collection('users').doc(targetUserId);
-
+                const userRef = firestoreDb.collection('users').doc(userId);
+                
                 let expiresAt: Date | null = null;
                 if (planType === 'anual') {
                   expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 ano
@@ -267,18 +245,18 @@ app.post('/api/mercado-pago/webhook', async (req, res) => {
                 const updateData: Record<string, unknown> = {
                   planType: planType,
                   paymentStatus: 'approved',
-                  paymentEmail: payerEmail,
+                  paymentEmail: paymentInfo.payer?.email || null,
                   updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 };
-
+                
                 if (expiresAt) {
                   updateData['subscriptionExpiresAt'] = expiresAt.toISOString();
                 } else {
                   updateData['subscriptionExpiresAt'] = null;
                 }
-
+                
                 await userRef.set(updateData, { merge: true });
-                console.log(`Pagamento Mercado Pago Aprovado (Webhook): Usuário ${targetUserId} liberado (${planType}).`);
+                console.log(`Pagamento Mercado Pago Aprovado (Webhook): Usuário ${userId} liberado (${planType}).`);
               }
            }
         }
@@ -326,22 +304,7 @@ app.post('/api/mercado-pago/verify', async (req, res) => {
       const payUserId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
       const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
 
-      let targetUserId = userId || payUserId || null;
-      const payerEmail = paymentInfo.payer?.email || null;
-
-      if (!targetUserId && payerEmail) {
-        try {
-          const q = await firestoreDb.collection('users').where('email', '==', payerEmail).limit(1).get();
-          if (!q.empty) {
-            targetUserId = q.docs[0].id;
-            console.log(`[Verify Express] encontrado usuário por email ${payerEmail}: ${targetUserId}`);
-          } else {
-            console.warn(`[Verify Express] nenhum usuário encontrado com email ${payerEmail}`);
-          }
-        } catch (err) {
-          console.error('[Verify Express] erro ao buscar usuário por email:', err);
-        }
-      }
+      const targetUserId = userId || payUserId;
 
       if (!targetUserId) {
         res.status(400).json({ error: 'Não foi possível identificar o userId para este pagamento.' });
@@ -358,7 +321,7 @@ app.post('/api/mercado-pago/verify', async (req, res) => {
       const updateData: Record<string, unknown> = {
         planType: planType,
         paymentStatus: 'approved',
-        paymentEmail: payerEmail,
+        paymentEmail: paymentInfo.payer?.email || null,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
 
