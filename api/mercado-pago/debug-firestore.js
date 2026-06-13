@@ -48,10 +48,16 @@ module.exports = async function handler(req, res) {
       code: error.code,
       details: error.details || null
     } : { value: String(error) };
+    const app = admin.apps[0];
+    const projectId = app?.options?.projectId || app?.options?.credential?.projectId || null;
+    const serviceAccountEmail = app?.options?.credential?.clientEmail || null;
     return res.status(500).json({
       status: 'error',
       error: errorDetails,
-      hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+      hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+      projectId,
+      serviceAccountEmail,
+      adminAppCount: admin.apps.length
     });
   }
 };
