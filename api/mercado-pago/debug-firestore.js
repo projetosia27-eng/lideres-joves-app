@@ -28,18 +28,26 @@ module.exports = async function handler(req, res) {
   try {
     const firestoreDb = initializeFirestore();
     const collections = await firestoreDb.listCollections();
+    const projectId = firestoreDb.app.options.projectId || firestoreDb.app.options.credential?.projectId;
+
     return res.status(200).json({
       status: 'ok',
       collections: collections.slice(0, 10).map((c) => c.id),
       hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
-      projectId: firestoreDb.app.options.credential.applicationDefault ? null : firestoreDb.app.options.credential.projectId
+      projectId: projectId || null,
+      adminAppCount: admin.apps.length
     });
   } catch (error) {
     console.error('[Debug Firestore] Error:', error);
+    const errorDetails = error instanceof Error ? {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    } : { value: String(error) };
     return res.status(500).json({
       status: 'error',
-      message: error.message,
-      stack: error.stack
+      error: errorDetails
     });
   }
 };
