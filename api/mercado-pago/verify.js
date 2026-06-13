@@ -101,6 +101,71 @@ module.exports = async function handler(req, res) {
           }
         } catch (err) {
           console.error('[Verify] Erro ao buscar usuário por email:', err);
+          return res.status(500).json({
+            error: 'Erro ao buscar usuário no Firestore',
+            details: err instanceof Error ? err.message : String(err),
+            source: 'firestore'
+          });
+        }
+      }
+
+      if (!targetUserId) {
+        return res.status(400).json({ error: 'Não foi possível identificar o userId para este pagamento.' });
+      }
+
+      // Atualizar Firestore do usuário
+      const userRef = firestoreDb.collection('users').doc(targetUserId);
+
+      let expiresAt = null;
+      if (planType === 'anual') {
+        expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+      }
+
+      const updateData = {
+        planType: planType,
+        paymentStatus: 'approved',
+        paymentEmail: payerEmail,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (expiresAt) {
+        updateData.subscriptionExpiresAt = expiresAt.toISOString();
+      } else {
+        updateData.subscriptionExpiresAt = null;
+      }
+
+      try {
+        await userRef.set(updateData, { merge: true });
+      } catch (err) {
+        console.error('[Verify] Erro ao atualizar usuário no Firestore:', err);
+        return res.status(500).json({
+          error: 'Erro ao salvar usuário no Firestore',
+          details: err instanceof Error ? err.message : String(err),
+          source: 'firestore'
+        });
+      }
+
+      console.log(`[Verify] Pagamento Aprovado: Usuário ${targetUserId} liberado e salvo (${planType}).`);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Pagamento ativado com sucesso!',
+        planType,
+        userId: targetUserId
+      });
+    }
+
+      if (!targetUserId && payerEmail) {
+        try {
+          const q = await firestoreDb.collection('users').where('email', '==', payerEmail).limit(1).get();
+          if (!q.empty) {
+            targetUserId = q.docs[0].id;
+            console.log(`[Verify] Encontrado usuário por email ${payerEmail}: ${targetUserId}`);
+          } else {
+            console.warn(`[Verify] Nenhum usuário encontrado com email ${payerEmail}`);
+          }
+        } catch (err) {
+          console.error('[Verify] Erro ao buscar usuário por email:', err);
         }
       }
 
