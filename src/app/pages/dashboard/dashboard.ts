@@ -27,8 +27,8 @@ export class DashboardComponent implements OnInit {
         const userId = this.data.userProfile()?.id || auth.currentUser?.uid;
         if (userId) {
           // verify in backend
-          this.http.post('/api/mercado-pago/verify', { paymentId, userId }).subscribe({
-             next: (res: any) => {
+          this.http.post<{ success: boolean }>('/api/mercado-pago/verify', { paymentId, userId }).subscribe({
+             next: (res) => {
                 if (res.success) {
                    // Successfully verified
                    // Remove query parameters to avoid re-triggering
