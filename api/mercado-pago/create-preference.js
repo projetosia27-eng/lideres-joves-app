@@ -45,7 +45,8 @@ module.exports = async function handler(req, res) {
     const appUrl = process.env.APP_URL || refererOrigin;
     
     const redirectBase = clientOrigin || appUrl;
-    const redirectUrl = redirectBase.endsWith('/') ? redirectBase : `${redirectBase}/`;
+    // Ensure we use the site root (no extra path) so Mercado Pago redirects don't produce unexpected paths
+    const redirectBaseNoSlash = redirectBase.replace(/\/+$/, '');
 
     // Construct the absolute address of this Express backend for the MP notification Webhook
     // For Vercel, we can rely on standard host headers or env vars
@@ -73,9 +74,10 @@ module.exports = async function handler(req, res) {
           plan_type: planType
         },
         back_urls: {
-          success: `${redirectUrl}dashboard?pagamento=sucesso`,
-          failure: `${redirectUrl}dashboard?pagamento=falha`,
-          pending: `${redirectUrl}dashboard?pagamento=pendente`
+          // Redirect to site root after checkout to avoid 404s and extra path segments
+          success: `${redirectBaseNoSlash}/`,
+          failure: `${redirectBaseNoSlash}/`,
+          pending: `${redirectBaseNoSlash}/`
         },
         auto_return: 'approved',
         notification_url: `${backendBaseUrl}/api/mercado-pago/webhook` // Webhook hits Vercel Serverless

@@ -127,38 +127,36 @@ module.exports = async function handler(req, res) {
            // Buscar informações detalhadas do pagamento
            console.log(`Buscando dados seguros do pagamento ID ${paymentId} na API do Mercado Pago...`);
            const paymentInfo = await paymentClient.get({ id: String(paymentId) });
-           
-           if (paymentInfo.status === 'approved') {
-              const userId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
-              const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
-              
-              if (userId) {
-                // Atualizar Firestore para aprovar o usuário (Liberar aplicativo)
-                const userRef = firestoreDb.collection('users').doc(userId);
-                
-                let expiresAt = null;
-                if (planType === 'anual') {
-                  expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 ano
-                }
-                // (vitalício não expira)
 
-                const updateData = {
-                  planType: planType,
-                  paymentStatus: 'approved',
-                  paymentEmail: paymentInfo.payer?.email || null,
-                  updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                };
-                
-                if (expiresAt) {
-                  updateData.subscriptionExpiresAt = expiresAt.toISOString();
-                } else {
-                  updateData.subscriptionExpiresAt = null;
-                }
-                
-                // Usamos set com merto para garantir criação/atualização sem falhas
-                await userRef.set(updateData, { merge: true });
-                console.log(`Pagamento Mercado Pago Aprovado: Usuário ${userId} liberado (${planType}).`);
-              }
+           // Normalize status and metadata
+           const status = paymentInfo.status || (paymentInfo.response && paymentInfo.response.status) || 'unknown';
+           const userId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
+           const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
+
+           if (userId) {
+             const userRef = firestoreDb.collection('users').doc(userId);
+
+             // Always persist the paymentStatus and paymentEmail (so UI shows pending/approved immediately)
+             const updateData = {
+               paymentStatus: status,
+               paymentEmail: paymentInfo.payer?.email || null,
+               updatedAt: admin.firestore.FieldValue.serverTimestamp()
+             };
+
+             // If approved, also set planType and subscriptionExpiresAt
+             if (status === 'approved') {
+               updateData.planType = planType;
+               if (planType === 'anual') {
+                 updateData.subscriptionExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+               } else {
+                 updateData.subscriptionExpiresAt = null;
+               }
+             }
+
+             await userRef.set(updateData, { merge: true });
+             console.log(`Webhook: atualizado usuário ${userId} com status=${status} planType=${updateData.planType || '(unchanged)'}.`);
+           } else {
+             console.warn('Webhook: payment metadata sem user_id — não foi possível atualizar usuário automaticamente.');
            }
         }
       }
