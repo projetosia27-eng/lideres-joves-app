@@ -35,6 +35,7 @@ try {
   });
   const db = admin.firestore();
   console.log('Firebase Admin inicializado com sucesso. Tentando acessar Firestore...');
+  console.log('Admin app projectId:', admin.app().options.projectId || '(não definido)');
 
   (async () => {
     try {
@@ -43,7 +44,10 @@ try {
       console.log('Validação concluída com sucesso. Se você vir collections, as credenciais funcionam.');
       process.exit(0);
     } catch (err) {
-      console.error('Erro ao acessar Firestore:', err.message || err);
+      console.error('Erro ao acessar Firestore:', err.code || '(sem code)', err.message || err);
+      if (err.code === 5) {
+        console.error('Verifique se o Firestore está ativado no projeto e se o banco de dados padrão existe.');
+      }
       process.exit(2);
     }
   })();

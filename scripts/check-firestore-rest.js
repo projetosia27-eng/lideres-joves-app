@@ -10,7 +10,7 @@ async function checkViaRest() {
   // For REST API, we need projectId - try to read from local config
   
   let projectId = 'gen-lang-client-0647760479';
-  let databaseId = 'ai-studio-9b77432b-ddce-4306-8700-63a5100592b9';
+  let databaseId = '(default)';
   
   // Try reading from firebase config if available
   try {

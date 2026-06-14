@@ -92,6 +92,7 @@ module.exports = async function handler(req, res) {
 
       // Atualizar Firestore do usuário
       const userRef = firestoreDb.collection('users').doc(targetUserId);
+      console.log('[Verify] Firestore userRef path:', userRef.path);
 
       let expiresAt = null;
       if (planType === 'anual') {
@@ -111,8 +112,13 @@ module.exports = async function handler(req, res) {
         updateData.subscriptionExpiresAt = null;
       }
 
-      // Usar set com merge para garantir persistência mesmo em novos cadastros
-      await userRef.set(updateData, { merge: true });
+      try {
+        await userRef.set(updateData, { merge: true });
+      } catch (firestoreError) {
+        console.error('[Verify] Firestore write failed:', firestoreError.code || '(no code)', firestoreError.message || firestoreError);
+        console.error('[Verify] Firestore write error details:', firestoreError.details || 'n/a');
+        throw firestoreError;
+      }
       console.log(`[Verify] Pagamento Aprovado: Usuário ${targetUserId} liberado e salvo (${planType}).`);
 
       return res.status(200).json({
