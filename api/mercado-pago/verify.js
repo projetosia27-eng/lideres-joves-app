@@ -8,22 +8,17 @@ function getFirestoreDb() {
 
   try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      console.log('[Firebase Init] Detectada FIREBASE_SERVICE_ACCOUNT_KEY em base64. Decodificando...');
       const serviceAccountJson = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8');
       const serviceAccount = JSON.parse(serviceAccountJson);
-      console.log('[Firebase Init] Credenciais parseadas. Project ID:', serviceAccount.project_id);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
-      console.log('[Firebase Init] Admin SDK inicializado com sucesso');
     } else {
-      console.warn('[Firebase Init] FIREBASE_SERVICE_ACCOUNT_KEY não encontrada. Tentando inicialização default...');
       admin.initializeApp();
     }
     return admin.firestore();
   } catch (error) {
-    console.error('[Firebase Init] Erro ao inicializar Firebase:', error?.message || error);
-    console.error('[Firebase Init] Stack:', error?.stack || 'sem stack');
+    console.warn('Firebase Admin não pôde ser inicializado em Serverless.', error);
     return null;
   }
 }
@@ -43,9 +38,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('[Verify] === INICIANDO HANDLER ===');
     const { paymentId, userId } = req.body;
-    console.log('[Verify] paymentId:', paymentId, 'userId:', userId);
 
     if (!paymentId) {
       return res.status(400).json({ error: 'paymentId is required' });
@@ -53,9 +46,6 @@ module.exports = async function handler(req, res) {
 
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
     const firestoreDb = getFirestoreDb();
-
-    console.log('[Verify] Token MP presente:', !!token);
-    console.log('[Verify] Firestore inicializado:', !!firestoreDb);
 
     if (!token) {
       return res.status(500).json({ error: 'MERCADOPAGO_ACCESS_TOKEN não configurado.' });
@@ -65,49 +55,18 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Firestore não inicializado.' });
     }
 
-    console.log('[Verify] Criando cliente MercadoPago...');
     const client = new MercadoPagoConfig({ accessToken: token });
     const paymentClient = new Payment(client);
-    console.log('[Verify] Cliente criado. Buscando pagamento...');
 
-    let paymentInfo;
-    try {
-      paymentInfo = await paymentClient.get({ id: String(paymentId) });
-      console.log('[Verify] paymentInfo.status:', paymentInfo?.status);
-    } catch (mpError) {
-      console.error('[Verify] Erro ao consultar Mercado Pago:', mpError);
-      return res.status(500).json({
-        error: 'Erro ao consultar Mercado Pago',
-        details: mpError instanceof Error ? mpError.message : String(mpError),
-        source: 'mercadopago'
-      });
-    }
+    console.log(`[Verify] Buscando dados seguros do pagamento ID ${paymentId} na API do Mercado Pago...`);
+    const paymentInfo = await paymentClient.get({ id: String(paymentId) });
 
     if (paymentInfo.status === 'approved') {
       const payUserId = paymentInfo.metadata?.user_id || paymentInfo.metadata?.userId || paymentInfo.metadata?.['user-id'];
       const planType = paymentInfo.metadata?.plan_type || paymentInfo.metadata?.planType || paymentInfo.metadata?.['plan-type'] || 'anual';
 
-      let targetUserId = userId || payUserId || null;
-      const payerEmail = paymentInfo.payer?.email || null;
-
-      if (!targetUserId && payerEmail) {
-        try {
-          const q = await firestoreDb.collection('users').where('email', '==', payerEmail).limit(1).get();
-          if (!q.empty) {
-            targetUserId = q.docs[0].id;
-            console.log(`[Verify] Encontrado usuário por email ${payerEmail}: ${targetUserId}`);
-          } else {
-            console.warn(`[Verify] Nenhum usuário encontrado com email ${payerEmail}`);
-          }
-        } catch (err) {
-          console.error('[Verify] Erro ao buscar usuário por email:', err);
-          return res.status(500).json({
-            error: 'Erro ao buscar usuário no Firestore',
-            details: err instanceof Error ? err.message : String(err),
-            source: 'firestore'
-          });
-        }
-      }
+      // Use the provided userId as a fallback if metadata didn't register it
+      const targetUserId = userId || payUserId;
 
       if (!targetUserId) {
         return res.status(400).json({ error: 'Não foi possível identificar o userId para este pagamento.' });
@@ -118,13 +77,13 @@ module.exports = async function handler(req, res) {
 
       let expiresAt = null;
       if (planType === 'anual') {
-        expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 ano
       }
 
       const updateData = {
         planType: planType,
         paymentStatus: 'approved',
-        paymentEmail: payerEmail,
+        paymentEmail: paymentInfo.payer?.email || null,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
 
@@ -134,17 +93,8 @@ module.exports = async function handler(req, res) {
         updateData.subscriptionExpiresAt = null;
       }
 
-      try {
-        await userRef.set(updateData, { merge: true });
-      } catch (err) {
-        console.error('[Verify] Erro ao atualizar usuário no Firestore:', err);
-        return res.status(500).json({
-          error: 'Erro ao salvar usuário no Firestore',
-          details: err instanceof Error ? err.message : String(err),
-          source: 'firestore'
-        });
-      }
-
+      // Usar set com merge para garantir persistência mesmo em novos cadastros
+      await userRef.set(updateData, { merge: true });
       console.log(`[Verify] Pagamento Aprovado: Usuário ${targetUserId} liberado e salvo (${planType}).`);
 
       return res.status(200).json({
@@ -153,21 +103,15 @@ module.exports = async function handler(req, res) {
         planType,
         userId: targetUserId
       });
+    } else {
+      return res.status(200).json({
+        success: false,
+        status: paymentInfo.status,
+        message: `O status do pagamento é: ${paymentInfo.status}`
+      });
     }
-
-    return res.status(200).json({
-      success: false,
-      status: paymentInfo.status,
-      message: `O status do pagamento é: ${paymentInfo.status}`
-    });
   } catch (error) {
     console.error('Erro na verificação de pagamento:', error);
-    const errorDetails = error instanceof Error ? error.message : String(error);
-    return res.status(500).json({
-      error: 'Erro ao processar verificação de pagamento',
-      details: errorDetails,
-      hasServiceAccountKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
-      mercadopagoConfigured: !!process.env.MERCADOPAGO_ACCESS_TOKEN
-    });
+    return res.status(500).json({ error: 'Erro ao processar verificação de pagamento', details: error.message });
   }
 };

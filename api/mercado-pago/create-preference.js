@@ -47,9 +47,6 @@ module.exports = async function handler(req, res) {
     const redirectBase = clientOrigin || appUrl;
     const redirectUrl = redirectBase.endsWith('/') ? redirectBase : `${redirectBase}/`;
 
-    // Allow overriding the final success redirect (useful for forcing the public frontend)
-    const frontendSuccessUrl = process.env.FRONTEND_SUCCESS_URL || null;
-
     // Construct the absolute address of this Express backend for the MP notification Webhook
     // For Vercel, we can rely on standard host headers or env vars
     const protocol = req.headers['x-forwarded-proto'] || 'https';
@@ -76,7 +73,7 @@ module.exports = async function handler(req, res) {
           plan_type: planType
         },
         back_urls: {
-          success: frontendSuccessUrl || `${redirectUrl}dashboard?pagamento=sucesso`,
+          success: `${redirectUrl}dashboard?pagamento=sucesso`,
           failure: `${redirectUrl}dashboard?pagamento=falha`,
           pending: `${redirectUrl}dashboard?pagamento=pendente`
         },

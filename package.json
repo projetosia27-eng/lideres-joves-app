@@ -9,8 +9,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "serve:ssr:app": "node dist/app/server/server.mjs",
-    "validate-firebase-key": "node scripts/validate-firebase-key.js"
+    "serve:ssr:app": "node dist/app/server/server.mjs"
   },
   "private": true,
   "dependencies": {
