@@ -11,7 +11,7 @@ function getFirestoreDatabaseId() {
   }
 
   try {
-    const configPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
+    const configPath = path.resolve(__dirname, '..', '..', 'firebase-applet-config.json');
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       if (config.firestoreDatabaseId) {
@@ -56,13 +56,14 @@ function getFirestoreDb() {
       }
     }
 
+    const db = admin.firestore();
     if (databaseId) {
-      console.log('[Firebase Init] webhook usando Firestore databaseId=', databaseId);
-      return admin.firestore(admin.app(), databaseId);
+      console.log('[Firebase Init] webhook usando Firestore databaseId=', databaseId, 'projectId=', firestoreProjectId);
+      db.settings({ projectId: firestoreProjectId || undefined, databaseId });
     } else {
       console.log('[Firebase Init] webhook usando banco Firestore padrão (default)');
-      return admin.firestore();
     }
+    return db;
   } catch (error) {
     console.error('[Firebase Init] webhook erro ao inicializar Firebase:', error?.message || error);
     console.error('[Firebase Init] webhook Stack:', error?.stack || 'sem stack');
