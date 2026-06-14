@@ -25,21 +25,24 @@ export class DashboardComponent implements OnInit {
       
       if (pagamento === 'sucesso' && paymentId && status === 'approved') {
         const userId = this.data.userProfile()?.id || auth.currentUser?.uid;
-        if (userId) {
-          // verify in backend
-          this.http.post<{ success: boolean }>('/api/mercado-pago/verify', { paymentId, userId }).subscribe({
-             next: (res) => {
-                if (res.success) {
-                   // Successfully verified
-                   // Remove query parameters to avoid re-triggering
-                   this.router.navigate([], { queryParams: {}, replaceUrl: true });
-                }
-             },
-             error: err => {
-                console.error('Error verifying payment:', err);
-             }
-          });
-        }
+
+        // If userId is not available on client, call verify with paymentId only.
+        // The server `verify` will attempt to read metadata.user_id from Mercado Pago.
+        const body: any = { paymentId };
+        if (userId) body.userId = userId;
+
+        this.http.post<{ success: boolean }>('/api/mercado-pago/verify', body).subscribe({
+          next: (res) => {
+            if (res.success) {
+              // Successfully verified
+              // Remove query parameters to avoid re-triggering
+              this.router.navigate([], { queryParams: {}, replaceUrl: true });
+            }
+          },
+          error: err => {
+            console.error('Error verifying payment:', err);
+          }
+        });
       }
     });
   }
