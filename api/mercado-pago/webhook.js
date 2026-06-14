@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 
 // Initialize Firebase Admin for Webhooks (Lazy load for serverless)
+let firestoreProjectId = null;
 function getFirestoreDb() {
   if (admin.apps.length > 0) {
     return admin.firestore();
@@ -9,17 +10,33 @@ function getFirestoreDb() {
 
   try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      const serviceAccountJson = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8');
+      const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+      console.log('[Firebase Init] FIREBASE_SERVICE_ACCOUNT_KEY detectada (webhook). Tentando parsear credenciais...');
+
+      let serviceAccountJson = rawKey;
+      if (!serviceAccountJson.trim().startsWith('{')) {
+        console.log('[Firebase Init] webhook parece ser base64. Decodificando base64...');
+        serviceAccountJson = Buffer.from(rawKey, 'base64').toString('utf-8');
+      } else {
+        console.log('[Firebase Init] webhook FIREBASE_SERVICE_ACCOUNT_KEY parece ser JSON raw. Usando como está.');
+      }
+
       const serviceAccount = JSON.parse(serviceAccountJson);
+      firestoreProjectId = serviceAccount.project_id || null;
+      console.log('[Firebase Init] webhook serviceAccount project_id=', firestoreProjectId, 'client_email=', serviceAccount.client_email);
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount),
+        projectId: firestoreProjectId
       });
+      console.log('[Firebase Init] webhook Admin SDK inicializado com sucesso');
     } else {
+      console.warn('[Firebase Init] FIREBASE_SERVICE_ACCOUNT_KEY ausente no webhook. Tentando inicialização default...');
       admin.initializeApp();
     }
     return admin.firestore();
   } catch (error) {
-    console.warn('Firebase Admin não pôde ser inicializado em Serverless.', error);
+    console.error('[Firebase Init] webhook erro ao inicializar Firebase:', error?.message || error);
+    console.error('[Firebase Init] webhook Stack:', error?.stack || 'sem stack');
     return null;
   }
 }
@@ -38,6 +55,7 @@ module.exports = async function handler(req, res) {
       if (paymentId) {
         const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
         const firestoreDb = getFirestoreDb();
+        console.log('[Webhook] admin.apps.length=', admin.apps.length, 'projectId=', firestoreProjectId, 'hasServiceAccountKey=', !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
         const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
         
         if (token && firestoreDb) {
