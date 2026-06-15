@@ -320,4 +320,15 @@ export class DetalheJovemComponent {
       default: return 'bg-slate-500';
     }
   }
+
+  contarPresencas(): number {
+    const j = this.jovem();
+    return j?.historicoPresenca?.filter(h => h.presente)?.length || 0;
+  }
+
+  obterUltimaPresenca(): Date | null {
+    const hist = this.historicoEnriquecido();
+    if (hist.length === 0) return null;
+    return new Date(hist[0]?.evento?.data);
+  }
 }
