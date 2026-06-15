@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DataService, StatusScore } from '../../data.service';
 import { ImgbbService } from '../../imgbb.service';
+import { SnackbarService } from '../../shared/snackbar.service';
 
 @Component({
   selector: 'app-detalhe-jovem',
@@ -18,6 +19,7 @@ export class DetalheJovemComponent {
   data = inject(DataService);
   cdr = inject(ChangeDetectorRef);
   imgbb = inject(ImgbbService);
+  snackbar = inject(SnackbarService);
 
   jovemId = signal<string>('');
   showDeleteModal = signal<boolean>(false);
@@ -178,7 +180,7 @@ export class DetalheJovemComponent {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione um arquivo de imagem (JPG, PNG).');
+      this.snackbar.show('Por favor, selecione um arquivo de imagem (JPG, PNG).');
       return;
     }
 
@@ -233,7 +235,7 @@ export class DetalheJovemComponent {
         }
       };
       img.onerror = () => {
-         alert('Erro ao carregar a imagem. Verifique se o arquivo não está corrompido e tente novamente (formatos ideais: JPG, PNG).');
+        this.snackbar.show('Erro ao carregar a imagem. Verifique se o arquivo não está corrompido e tente novamente (formatos ideais: JPG, PNG).');
       };
       img.src = e.target?.result as string;
     };

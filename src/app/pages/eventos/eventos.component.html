@@ -41,6 +41,10 @@
             <button (click)="enviarAviso(evento.id)" title="Enviar Aviso aos Jovens" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white border border-emerald-100 dark:border-emerald-500/20 shadow-sm transition-colors group/btn">
               <span class="material-symbols-outlined text-[20px] group-hover/btn:-rotate-12 transition-transform">campaign</span>
             </button>
+
+            <button (click)="abrirRelatorioPresenca(evento.id)" title="Ver Relatório de Presença" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white border border-blue-100 dark:border-blue-500/20 shadow-sm transition-colors group/btn">
+              <span class="material-symbols-outlined text-[20px] group-hover/btn:scale-110 transition-transform">assignment</span>
+            </button>
           </div>
         </div>
       }
@@ -80,6 +84,77 @@
         <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3">
           <button (click)="closeModal()" class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 dark:text-slate-600 hover:text-slate-800 dark:text-white transition-colors uppercase tracking-wider">Cancelar</button>
           <button (click)="saveEvento()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-full transition-colors shadow-lg shadow-indigo-200 uppercase tracking-wider">Criar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Relatório de Presença -->
+  @if (showPresencaModal() && selectedEvento()) {
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-800 dark:text-white">Relatório de Presença</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ selectedEvento()!.nome }} - {{ selectedEvento()!.data | date:'fullDate':'':'pt-BR' }}</p>
+          </div>
+          <button (click)="showPresencaModal.set(false)" class="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        
+        <div class="p-6 space-y-6">
+          <!-- Presentes -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-emerald-500 text-[20px]">done_circle</span>
+              Jovens Presentes ({{ getPresencasEvento(selectedEvento()!.id).length }})
+            </h3>
+            
+            @if (getPresencasEvento(selectedEvento()!.id).length > 0) {
+              <div class="space-y-2">
+                @for (jovem of getPresencasEvento(selectedEvento()!.id); track jovem.nome) {
+                  <div class="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-lg flex items-center gap-3">
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400">done</span>
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-slate-800 dark:text-white">{{ jovem.nome }}</p>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">{{ jovem.telefone || 'Sem telefone' }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="text-sm text-slate-500 dark:text-slate-400">Nenhum jovem marcado como presente.</p>
+            }
+          </div>
+
+          <!-- Ausentes -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-slate-400 text-[20px]">cancel</span>
+              Jovens Ausentes ({{ getAusenciasEvento(selectedEvento()!.id).length }})
+            </h3>
+            
+            @if (getAusenciasEvento(selectedEvento()!.id).length > 0) {
+              <div class="space-y-2">
+                @for (jovem of getAusenciasEvento(selectedEvento()!.id); track jovem.nome) {
+                  <div class="p-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg flex items-center gap-3 opacity-60">
+                    <span class="material-symbols-outlined text-slate-400">block</span>
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ jovem.nome }}</p>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">{{ jovem.telefone || 'Sem telefone' }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="text-sm text-slate-500 dark:text-slate-400">Todos os jovens marcados como presentes!</p>
+            }
+          </div>
+        </div>
+        
+        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
+          <button (click)="showPresencaModal.set(false)" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white text-sm font-bold rounded-lg transition-colors uppercase tracking-wider">Fechar</button>
         </div>
       </div>
     </div>

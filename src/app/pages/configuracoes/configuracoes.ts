@@ -7,6 +7,7 @@ import { ThemeService } from '../../theme.service';
 import { Router } from '@angular/router';
 import { auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
+import { SnackbarService } from '../../shared/snackbar.service';
 
 @Component({
   selector: 'app-configuracoes',
@@ -17,6 +18,7 @@ import { signOut } from 'firebase/auth';
 })
 export class ConfiguracoesComponent {
   imgbb = inject(ImgbbService);
+  snackbar = inject(SnackbarService);
 
   installPwa() {
     // Função de placeholder para evitar erro de compilação
@@ -144,7 +146,7 @@ export class ConfiguracoesComponent {
       await signOut(auth);
       this.router.navigate(['/login']);
     } catch {
-      alert('Erro ao sair da conta.');
+      this.snackbar.show('Erro ao sair da conta.');
     }
   }
 
@@ -164,7 +166,7 @@ export class ConfiguracoesComponent {
       setTimeout(() => this.saved.set(false), 3000);
     } catch(e) {
       console.error(e);
-      alert('Erro ao salvar as configurações.');
+      this.snackbar.show('Erro ao salvar as configurações.');
     } finally {
       this.saving.set(false);
     }
@@ -175,7 +177,7 @@ export class ConfiguracoesComponent {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione um arquivo de imagem (JPG, PNG).');
+      this.snackbar.show('Por favor, selecione um arquivo de imagem (JPG, PNG).');
       return;
     }
 
@@ -218,7 +220,7 @@ export class ConfiguracoesComponent {
         }
       };
       img.onerror = () => {
-         alert('Erro ao carregar a imagem. Verifique se o arquivo não está corrompido e tente novamente.');
+        this.snackbar.show('Erro ao carregar a imagem. Verifique se o arquivo não está corrompido e tente novamente.');
       };
       img.src = e.target?.result as string;
     };

@@ -2,6 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { DataService, Evento } from '../../data.service';
 import { FormsModule } from '@angular/forms';
+import { SnackbarService } from '../../shared/snackbar.service';
 
 @Component({
   selector: 'app-presencas',
@@ -12,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class PresencasComponent {
   data = inject(DataService);
+  snackbar = inject(SnackbarService);
   
   selectedEventoId = signal<string | null>(null);
   selectedEvento = computed(() => this.data.eventos().find(e => e.id === this.selectedEventoId()));
@@ -47,7 +49,7 @@ export class PresencasComponent {
     const evId = this.selectedEventoId();
     if (evId) {
       this.data.registrarPresenca(evId, this.presencasState());
-      alert('Presenças atualizadas com sucesso!');
+      this.snackbar.show('Presenças atualizadas com sucesso!');
     }
   }
 }

@@ -3,6 +3,7 @@ import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, Evento } from '../../data.service';
 import { Router } from '@angular/router';
+import { SnackbarService } from '../../shared/snackbar.service';
 
 @Component({
   selector: 'app-eventos',
@@ -14,8 +15,11 @@ import { Router } from '@angular/router';
 export class EventosComponent {
   data = inject(DataService);
   router = inject(Router);
+  snackbar = inject(SnackbarService);
   
   showModal = signal(false);
+  showPresencaModal = signal(false);
+  selectedEvento = signal<Evento | null>(null);
   newEvent = { nome: '', data: '' };
   searchQuery = signal('');
 
@@ -53,10 +57,40 @@ export class EventosComponent {
   enviarAviso(eventoId: string) {
     const evento = this.data.eventos().find(e => e.id === eventoId);
     if (!evento || evento.realizado || this.isFinished(evento)) {
-        alert('Não é possível enviar aviso para um evento finalizado.');
+      this.snackbar.show('Não é possível enviar aviso para um evento finalizado.');
         return;
     }
     this.router.navigate(['/jovens'], { queryParams: { avisoEvento: eventoId } });
+  }
+
+  abrirRelatorioPresenca(eventoId: string) {
+    const evento = this.data.eventos().find(e => e.id === eventoId);
+    if (evento) {
+      this.selectedEvento.set(evento);
+      this.showPresencaModal.set(true);
+    }
+  }
+
+  getPresencasEvento(eventoId: string) {
+    const jovens = this.data.jovens();
+    return jovens.filter(j => 
+      j.historicoPresenca?.some(h => h.eventoId === eventoId && h.presente)
+    ).map(j => ({
+      nome: j.nome,
+      fotoUrl: j.fotoUrl,
+      telefone: j.telefone
+    }));
+  }
+
+  getAusenciasEvento(eventoId: string) {
+    const jovens = this.data.jovens();
+    return jovens.filter(j => 
+      j.historicoPresenca?.some(h => h.eventoId === eventoId && !h.presente)
+    ).map(j => ({
+      nome: j.nome,
+      fotoUrl: j.fotoUrl,
+      telefone: j.telefone
+    }));
   }
 
   isFinished(evento: Evento): boolean {
