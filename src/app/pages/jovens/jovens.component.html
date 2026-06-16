@@ -362,18 +362,12 @@
           </div>
           
           <div class="mt-2 flex-1">
-            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider mb-3">Enviar Mensagem</h3>
-
-            <div class="mb-3 flex items-center gap-2">
-              <button (click)="selectAllToggle()" class="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-800 rounded-lg border">Selecionar / Desmarcar Todos</button>
-              <button (click)="enviarWhatsAppEmMassa()" class="ml-auto px-3 py-1 text-xs bg-emerald-600 text-white rounded-lg">Enviar Selecionados</button>
-            </div>
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider mb-3">Enviar Mensagem Individual</h3>
 
             <div class="space-y-2">
               @for(jovem of filteredJovens(); track jovem.id) {
                 <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-sm">
                   <div class="flex items-center gap-3 overflow-hidden">
-                    <input type="checkbox" (change)="toggleSelect(jovem.id)" [checked]="selectedMap()[jovem.id]" class="w-4 h-4" />
                     <div class="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 shrink-0 overflow-hidden text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center">
                        @if(jovem.fotoUrl) {
                          <img [src]="jovem.fotoUrl" [alt]="'Foto de ' + jovem.nome" class="w-full h-full object-cover">
@@ -397,66 +391,6 @@
         </div>
         <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-end gap-3">
           <button (click)="showMessageModal.set(false)" class="px-6 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-full transition-colors">Fechar</button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Modal Bulk WhatsApp Send (durante envio) -->
-  @if (showBulkSendModal()) {
-    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
-          <span class="material-symbols-outlined text-emerald-500 text-[24px] animate-pulse">mail</span>
-          <h2 class="text-lg font-semibold text-slate-800 dark:text-white">Enviando Mensagens</h2>
-        </div>
-        
-        <div class="p-6 space-y-4">
-          @if (isSendingBulk()) {
-            <!-- Enviando -->
-            <div class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-sm p-4 rounded-xl">
-              <p class="font-medium mb-3">Abrindo chats no WhatsApp...</p>
-              <div class="space-y-2">
-                <div class="text-xs text-emerald-700 dark:text-emerald-400 font-mono">
-                  {{ bulkSendIndex() }} / {{ bulkSendTotal() }} enviados
-                </div>
-                <div class="w-full bg-emerald-200 dark:bg-emerald-500/30 rounded-full h-2 overflow-hidden">
-                  <div 
-                    class="bg-emerald-600 h-full transition-all duration-300" 
-                    [style.width.%]="(bulkSendIndex() / bulkSendTotal()) * 100">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-blue-800 dark:text-blue-300 text-xs p-3 rounded-xl space-y-2">
-              <p><strong>⏰ Aguarde:</strong> As abas abrem automaticamente a cada 2 segundos</p>
-              <p><strong>✏️ Ao abrir:</strong> Revise a mensagem e clique em "Enviar"</p>
-              <p><strong>🔁 Próximo:</strong> Quando terminar, voltaremos para a aba seguinte</p>
-            </div>
-          } @else {
-            <!-- Concluído -->
-            <div class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-sm p-4 rounded-xl">
-              <p class="font-medium mb-2">✓ Todas as abas foram abertas!</p>
-              <p class="text-xs">{{ bulkSendTotal() }} contatos foram enviados para o WhatsApp.</p>
-            </div>
-
-            <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-4 rounded-xl space-y-2 text-sm">
-              <p class="font-bold text-slate-800 dark:text-white">Próximos passos:</p>
-              <ul class="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300 text-xs">
-                <li>Verifique cada aba do WhatsApp aberta</li>
-                <li>Digite sua mensagem personalizada (se desejar)</li>
-                <li>Clique em "Enviar" para cada contato</li>
-              </ul>
-            </div>
-          }
-
-          <button 
-            (click)="showBulkSendModal.set(false)" 
-            [disabled]="isSendingBulk()"
-            class="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50 text-slate-800 dark:text-white text-sm font-bold rounded-lg transition-colors cursor-pointer">
-            {{ isSendingBulk() ? 'Enviando...' : 'Fechar' }}
-          </button>
         </div>
       </div>
     </div>

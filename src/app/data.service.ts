@@ -493,15 +493,23 @@ export class DataService {
         });
       }
 
-      const eventoRef = doc(db, 'eventos', eventoId);
-      batch.update(eventoRef, {
-        realizado: true,
-        updatedAt: serverTimestamp()
-      });
+      // Do not mark the event as 'realizado' automatically here.
+      // Finalização de evento deve ser feita manualmente pelo líder via UI.
 
       await batch.commit();
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, 'batch');
+    }
+  }
+
+  async finalizarEvento(eventoId: string) {
+    try {
+      await updateDoc(doc(db, 'eventos', eventoId), {
+        realizado: true,
+        updatedAt: serverTimestamp()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'eventos');
     }
   }
 

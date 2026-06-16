@@ -20,6 +20,24 @@ export class PresencasComponent {
   
   presencasState = signal<Record<string, boolean>>({});
 
+  isEventoEditavel = computed(() => {
+    const evento = this.selectedEvento();
+    if (!evento) return false;
+    
+    // Verificar se o evento foi finalizado
+    if (evento.realizado) return false;
+    
+    // Verificar se a data do evento é anterior à data atual
+    const eventoDate = new Date(evento.data);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    eventoDate.setHours(0, 0, 0, 0);
+    
+    if (eventoDate < today) return false;
+    
+    return true;
+  });
+
   selectEvento(evento: Evento) {
     this.selectedEventoId.set(evento.id);
     

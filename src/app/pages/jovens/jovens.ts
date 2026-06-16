@@ -23,8 +23,6 @@ export class JovensComponent implements OnInit {
   snackbar = inject(SnackbarService);
   showModal = signal(false);
   showMessageModal = signal(false);
-  // selection state for bulk actions in message modal
-  selectedMap = signal<Record<string, boolean>>({});
   jovemToDelete = signal<string | null>(null);
   
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
@@ -391,108 +389,13 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     window.open(link, '_blank');
   }
 
-  // Bulk actions
-  toggleSelect(jid: string) {
-    const map = { ...this.selectedMap() };
-    map[jid] = !map[jid];
-    this.selectedMap.set(map);
-  }
 
-  selectAllToggle() {
-    const current = this.selectedMap();
-    const all = this.filteredJovens().map(j => j.id);
-    const allSelected = all.length > 0 && all.every(id => current[id]);
-    const next: Record<string, boolean> = {};
-    if (!allSelected) {
-      all.forEach(id => next[id] = true);
-    }
-    this.selectedMap.set(next);
-  }
-
-  getSelectedContacts() {
-    const map = this.selectedMap();
-    return this.filteredJovens().filter(j => map[j.id]).map(j => ({ id: j.id, nome: j.nome, telefone: j.telefone }));
-  }
 
   normalizePhone(raw: string | null | undefined) {
     if (!raw) return null;
     let num = raw.replace(/\D/g, '');
     if (num.length === 10 || num.length === 11) num = '55' + num;
     return num;
-  }
-
-  async copySelectedNumbers() {
-    const rec = this.getSelectedContacts();
-    if (rec.length === 0) { this.snackbar.show('Nenhum contato selecionado.'); return; }
-    const numbers = rec.map(r => this.normalizePhone(r.telefone) || '').filter(Boolean).join('\n');
-    try {
-      await navigator.clipboard.writeText(numbers);
-      this.snackbar.show('Números copiados para a área de transferência. Cole no seu WhatsApp.');
-    } catch (e) {
-      console.error('Clipboard error', e);
-      this.snackbar.show('Falha ao copiar para a área de transferência.');
-    }
-  }
-
-  exportSelectedCsv() {
-    const rec = this.getSelectedContacts();
-    if (rec.length === 0) { this.snackbar.show('Nenhum contato selecionado.'); return; }
-    const rows = rec.map(r => `"${(r.nome || '').replace(/"/g, '""')}","${(r.telefone || '').replace(/"/g, '""')}"`);
-    const csv = 'Nome,Telefone\n' + rows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `contatos_${new Date().toISOString().slice(0,10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  showBulkSendModal = signal(false);
-  bulkSendIndex = signal(0);
-  bulkSendTotal = signal(0);
-  isSendingBulk = signal(false);
-
-  enviarWhatsAppEmMassa() {
-    const recipients = this.getSelectedContacts();
-    if (recipients.length === 0) {
-      this.snackbar.show('Selecione ao menos um jovem para enviar.');
-      return;
-    }
-    
-    this.bulkSendTotal.set(recipients.length);
-    this.bulkSendIndex.set(0);
-    this.isSendingBulk.set(true);
-    this.showBulkSendModal.set(true);
-    
-    this.sendToNextContact(recipients, 0);
-  }
-
-  private sendToNextContact(recipients: any[], index: number) {
-    if (index >= recipients.length) {
-      this.isSendingBulk.set(false);
-      return;
-    }
-
-    this.bulkSendIndex.set(index + 1);
-    const recipient = recipients[index];
-    const num = this.normalizePhone(recipient.telefone);
-    
-    if (!num) {
-      // Pula para próximo se telefone inválido
-      setTimeout(() => this.sendToNextContact(recipients, index + 1), 1500);
-      return;
-    }
-
-    const msg = this.messageTemplate().replace('{nome}', recipient.nome.split(' ')[0]);
-    const waUrl = `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
-    
-    window.open(waUrl, '_blank');
-    
-    // Abre próximo após 2 segundos
-    setTimeout(() => this.sendToNextContact(recipients, index + 1), 2000);
   }
 
   eventosPendentes = computed(() => {

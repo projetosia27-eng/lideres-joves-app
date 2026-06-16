@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, Evento } from '../../data.service';
@@ -12,10 +12,11 @@ import { SnackbarService } from '../../shared/snackbar.service';
   templateUrl: './eventos.component.html',
   styleUrls: ['./eventos.component.css']
 })
-export class EventosComponent {
+export class EventosComponent implements OnDestroy {
   data = inject(DataService);
   router = inject(Router);
   snackbar = inject(SnackbarService);
+  private overdueCheckId: any = null;
   
   showModal = signal(false);
   showPresencaModal = signal(false);
@@ -43,6 +44,53 @@ export class EventosComponent {
     this.showModal.set(true);
   }
 
+  constructor() {
+    // Start periodic check for overdue events that are not finalized
+    if (typeof window !== 'undefined') {
+      this.overdueCheckId = setInterval(() => {
+        try {
+          const now = new Date();
+          const overdue = this.data.eventos().filter(e => !e.realizado && new Date(e.data) < now);
+          overdue.forEach(ev => {
+            // show a high-priority snackbar with action to finalize
+              this.snackbar.show(`Evento "${ev.nome}" passou e precisa ser finalizado.`, 0, 'error', {
+              label: 'Finalizar',
+              callback: () => this.finalizarEvento(ev.id)
+              }, true);
+
+            // play a short beep
+            try {
+              const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+              if (AudioCtx) {
+                const ctx = new AudioCtx();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'sine';
+                o.frequency.value = 880;
+                g.gain.value = 0.03;
+                o.connect(g);
+                g.connect(ctx.destination);
+                o.start();
+                setTimeout(() => { o.stop(); try { ctx.close(); } catch(e) {} }, 180);
+              }
+            } catch (err) {
+              // ignore audio errors
+            }
+          });
+        } catch (err) {
+          // ignore
+        }
+      }, 7000);
+    }
+  }
+
+    ngOnDestroy(): void {
+      if (this.overdueCheckId) {
+        clearInterval(this.overdueCheckId);
+        this.overdueCheckId = null;
+      }
+    }
+
   closeModal() {
     this.showModal.set(false);
   }
@@ -68,6 +116,19 @@ export class EventosComponent {
     if (evento) {
       this.selectedEvento.set(evento);
       this.showPresencaModal.set(true);
+    }
+  }
+
+  async finalizarEvento(eventoId: string) {
+    try {
+      await this.data.finalizarEvento(eventoId);
+      this.snackbar.show('Evento finalizado.', 3000, 'success');
+      // Close modal if it was open for this event
+      if (this.selectedEvento() && this.selectedEvento()!.id === eventoId) {
+        this.showPresencaModal.set(false);
+      }
+    } catch (err) {
+      this.snackbar.show('Erro ao finalizar evento.', 4000, 'error');
     }
   }
 

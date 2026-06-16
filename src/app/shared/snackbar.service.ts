@@ -7,7 +7,7 @@ export class SnackbarService {
   private currentEl: HTMLElement | null = null;
   private hideTimer: any = null;
 
-  show(message: string, duration = 3000, type: SnackbarType = 'info', action?: { label: string; callback: () => void }) {
+  show(message: string, duration = 3000, type: SnackbarType = 'info', action?: { label: string; callback: () => void }, sticky = false) {
     if (typeof document === 'undefined') return;
 
     // If an existing snackbar is visible, remove it first
@@ -63,6 +63,20 @@ export class SnackbarService {
       el.appendChild(btn);
     }
 
+    // Close button for sticky or always-available dismiss
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '\u2715';
+    Object.assign(closeBtn.style, {
+      background: 'transparent',
+      border: 'none',
+      color: 'rgba(255,255,255,0.85)',
+      fontWeight: '600',
+      cursor: 'pointer',
+      marginLeft: '6px'
+    });
+    closeBtn.onclick = () => this._hide(el);
+    el.appendChild(closeBtn);
+
     document.body.appendChild(el);
     // keep reference
     this.currentEl = el;
@@ -76,7 +90,9 @@ export class SnackbarService {
     // Ensure errors are visible a bit longer by default
     const effectiveDuration = type === 'error' && duration < 5000 ? 5000 : duration;
 
-    this.hideTimer = setTimeout(() => this._hide(el), effectiveDuration);
+    if (!sticky) {
+      this.hideTimer = setTimeout(() => this._hide(el), effectiveDuration);
+    }
   }
 
   private _hide(el: HTMLElement) {
