@@ -513,6 +513,14 @@ export class DataService {
     }
   }
 
+  async deleteEvento(eventoId: string) {
+    try {
+      await deleteDoc(doc(db, 'eventos', eventoId));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, 'eventos');
+    }
+  }
+
   public totalEntradas = computed(() => {
     return this.transacoes()
       .filter(t => t.tipo === 'entrada')

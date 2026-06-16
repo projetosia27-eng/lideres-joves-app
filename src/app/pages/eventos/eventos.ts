@@ -123,12 +123,27 @@ export class EventosComponent implements OnDestroy {
     try {
       await this.data.finalizarEvento(eventoId);
       this.snackbar.show('Evento finalizado.', 3000, 'success');
-      // Close modal if it was open for this event
       if (this.selectedEvento() && this.selectedEvento()!.id === eventoId) {
         this.showPresencaModal.set(false);
       }
     } catch (err) {
       this.snackbar.show('Erro ao finalizar evento.', 4000, 'error');
+    }
+  }
+
+  async deletarEvento(eventoId: string) {
+    const confirmDelete = window.confirm('Deseja realmente excluir este evento? Esta ação não pode ser desfeita.');
+    if (!confirmDelete) {
+      return;
+    }
+    try {
+      await this.data.deleteEvento(eventoId);
+      this.snackbar.show('Evento excluído com sucesso.', 3000, 'success');
+      if (this.selectedEvento() && this.selectedEvento()!.id === eventoId) {
+        this.showPresencaModal.set(false);
+      }
+    } catch (err) {
+      this.snackbar.show('Erro ao excluir evento.', 4000, 'error');
     }
   }
 
