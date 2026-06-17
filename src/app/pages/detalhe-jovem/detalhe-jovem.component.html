@@ -345,7 +345,7 @@
         
         <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3 shrink-0">
           <button (click)="closeEditModal()" class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors uppercase tracking-wider">Cancelar</button>
-          <button (click)="saveEditJovem()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-full transition-colors shadow-lg shadow-indigo-200 dark:shadow-none uppercase tracking-wider">Salvar</button>
+          <button (click)="saveEditJovem()" [disabled]="!isEditFormValid()" [class.opacity-50]="!isEditFormValid()" [class.cursor-not-allowed]="!isEditFormValid()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-full transition-colors shadow-lg shadow-indigo-200 dark:shadow-none uppercase tracking-wider">Salvar</button>
         </div>
       </div>
     </div>

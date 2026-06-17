@@ -158,6 +158,20 @@ export class EventosComponent implements OnDestroy {
     }
   }
 
+  async reabrirEvento(eventoId: string) {
+    try {
+      await this.data.unfinalizarEvento(eventoId);
+      this.snackbar.show('Evento reaberto.', 3000, 'success');
+    } catch (error) {
+      console.error(error);
+      this.snackbar.show('Erro ao reabrir evento.', 4000, 'error');
+    }
+  }
+
+  isFutureRealizado(evento: Evento): boolean {
+    return evento.realizado && new Date(evento.data) > new Date();
+  }
+
   async deletarEvento(eventoId: string) {
     const confirmDelete = window.confirm('Deseja realmente excluir este evento? Esta ação não pode ser desfeita.');
     if (!confirmDelete) {

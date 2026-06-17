@@ -147,9 +147,37 @@ export class DetalheJovemComponent {
   }
 
   saveEditJovem() {
-    if (!this.editJovem.nome) return;
+    if (!this.isEditFormValid()) return;
     this.data.updateJovem(this.jovemId(), this.editJovem);
     this.closeEditModal();
+  }
+
+  private isValidDateString(dateString: string): boolean {
+    if (!dateString || dateString.length !== 10) return false;
+    const parts = dateString.split('/');
+    if (parts.length !== 3) return false;
+
+    const dia = parseInt(parts[0], 10);
+    const mes = parseInt(parts[1], 10);
+    const ano = parseInt(parts[2], 10);
+    if (isNaN(dia) || isNaN(mes) || isNaN(ano)) return false;
+    if (mes < 1 || mes > 12) return false;
+    if (ano < 1900 || ano > new Date().getFullYear()) return false;
+
+    const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if ((ano % 4 === 0 && ano % 100 !== 0) || (ano % 400 === 0)) {
+      diasPorMes[1] = 29;
+    }
+    if (dia < 1 || dia > diasPorMes[mes - 1]) return false;
+
+    const dateObj = new Date(ano, mes - 1, dia);
+    if (dateObj > new Date()) return false;
+
+    return true;
+  }
+
+  isEditFormValid(): boolean {
+    return !!(this.editJovem.nome && this.isValidDateString(this.dataNascimentoInput));
   }
 
   jovem = computed(() => {

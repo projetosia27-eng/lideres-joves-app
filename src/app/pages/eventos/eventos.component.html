@@ -20,8 +20,8 @@
     <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar por nome ou data..." class="w-full pl-12 pr-4 py-3 text-sm border border-slate-200 dark:border-white/10 rounded-2xl bg-white/50 dark:bg-[#0a0a0c]/50 text-slate-900 dark:text-white backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all shadow-sm">
   </div>
 
-  <div class="card-premium p-0 overflow-auto" style="max-height:calc(100vh - 220px);">
-    <div class="divide-y divide-slate-100 dark:divide-white/5">
+  <div class="card-premium p-0 overflow-y-auto" style="max-height:calc(100vh - 180px); padding-bottom:5rem; scroll-padding-bottom:6rem;">
+    <div class="divide-y divide-slate-100 dark:divide-white/5 min-h-0">
       @for (evento of filteredEventos(); track evento.id) {
         <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors gap-6 group">
           <div class="flex items-center gap-5">
@@ -43,23 +43,32 @@
             </span>
             
             @if (!evento.realizado) {
-              <button (click)="enviarAviso(evento.id)" title="Enviar Aviso aos Jovens" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white border border-emerald-100 dark:border-emerald-500/20 shadow-sm transition-colors group/btn">
+              <button (click)="enviarAviso(evento.id)" title="Enviar Aviso aos Jovens" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white border border-emerald-100 dark:border-emerald-500/20 shadow-sm transition-colors group/btn">
                 <span class="material-symbols-outlined text-[20px] group-hover/btn:-rotate-12 transition-transform">campaign</span>
+                <span class="text-[10px] uppercase tracking-widest">Aviso</span>
               </button>
             }
 
-            <button (click)="abrirRelatorioPresenca(evento.id)" title="Ver Relatório de Presença" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white border border-blue-100 dark:border-blue-500/20 shadow-sm transition-colors group/btn">
+            <button (click)="abrirRelatorioPresenca(evento.id)" title="Ver Relatório de Presença" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white border border-blue-100 dark:border-blue-500/20 shadow-sm transition-colors group/btn">
               <span class="material-symbols-outlined text-[20px] group-hover/btn:scale-110 transition-transform">assignment</span>
+              <span class="text-[10px] uppercase tracking-widest">Presença</span>
             </button>
 
             @if (!evento.realizado) {
-              <button (click)="finalizarEvento(evento.id)" title="Finalizar Evento" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white border border-amber-100 dark:border-amber-500/20 shadow-sm transition-colors group/btn">
+              <button (click)="finalizarEvento(evento.id)" title="Finalizar Evento" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white border border-amber-100 dark:border-amber-500/20 shadow-sm transition-colors group/btn">
                 <span class="material-symbols-outlined text-[20px]">flag</span>
+                <span class="text-[10px] uppercase tracking-widest">Finalizar</span>
+              </button>
+            } @else if (isFutureRealizado(evento)) {
+              <button (click)="reabrirEvento(evento.id)" title="Reabrir evento" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700/20 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-white border border-slate-200 dark:border-slate-600 shadow-sm transition-colors group/btn">
+                <span class="material-symbols-outlined text-[20px]">undo</span>
+                <span class="text-[10px] uppercase tracking-widest">Reabrir</span>
               </button>
             }
 
-            <button (click)="deletarEvento(evento.id)" title="Excluir Evento" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-white border border-rose-100 dark:border-rose-500/20 shadow-sm transition-colors group/btn">
+            <button (click)="deletarEvento(evento.id)" title="Excluir Evento" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-white border border-rose-100 dark:border-rose-500/20 shadow-sm transition-colors group/btn">
               <span class="material-symbols-outlined text-[20px]">delete</span>
+              <span class="text-[10px] uppercase tracking-widest">Excluir</span>
             </button>
           </div>
         </div>
