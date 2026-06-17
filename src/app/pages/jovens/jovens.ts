@@ -427,6 +427,11 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     return typeof window !== 'undefined' && typeof navigator !== 'undefined' && 'contacts' in navigator;
   }
 
+  get isIOS(): boolean {
+    if (typeof navigator === 'undefined') return false;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  }
+
   // Formata telefone para padrão brasileiro
   private formatPhoneBR(phone: string): string {
     const cleaned = phone.replace(/\D/g, '');
@@ -441,45 +446,91 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
   }
 
   async importContact() {
-    if (!this.contactsSupported) {
-      this.snackbar.show('A importação de contatos não é suportada neste navegador ou dispositivo.');
+    if (this.contactsSupported) {
+      try {
+        // Abre o seletor nativo de contatos solicitando o nome e o telefone
+        const props = ['name', 'tel'];
+        const opts = { multiple: false };
+        
+        const nav = navigator as unknown as { 
+          contacts: { 
+            select: (props: string[], opts: { multiple: boolean }) => Promise<{ name?: string[]; tel?: string[] }[]> 
+          } 
+        };
+        
+        const contacts = await nav.contacts.select(props, opts);
+        if (contacts && contacts.length > 0) {
+          const contact = contacts[0];
+          // Nome completo
+          if (contact.name && contact.name.length > 0) {
+            this.newJovem.nome = contact.name[0];
+          }
+          // Telefone formatado
+          if (contact.tel && contact.tel.length > 0) {
+            const rawPhone = contact.tel[0];
+            this.newJovem.telefone = this.formatPhoneBR(rawPhone);
+          }
+          this.cdr.detectChanges();
+          this.snackbar.show('Contato importado com sucesso!');
+        }
+        return;
+      } catch (err: unknown) {
+        console.error('Erro ao importar contato via Contacts API:', err);
+        // fallback será tentado abaixo
+      }
+    }
+
+    // Fallbacks para navegadores que não suportam Contacts Picker (ex: Safari iOS)
+    // 1) Se houver um input de vCard oculto no template, abrir o seletor de arquivos
+    const vcardInput = document.getElementById('vcardInput') as HTMLInputElement | null;
+    if (vcardInput) {
+      vcardInput.click();
+      this.snackbar.show('Selecione o arquivo .vcf do seu contato (exporte do app Contatos se necessário).');
       return;
     }
 
+    // 2) Último recurso: pedir que o usuário cole o número manualmente
     try {
-      // Abre o seletor nativo de contatos solicitando o nome e o telefone
-      const props = ['name', 'tel'];
-      const opts = { multiple: false };
-      
-      const nav = navigator as unknown as { 
-        contacts: { 
-          select: (props: string[], opts: { multiple: boolean }) => Promise<{ name?: string[]; tel?: string[] }[]> 
-        } 
-      };
-      
-      const contacts = await nav.contacts.select(props, opts);
-      if (contacts && contacts.length > 0) {
-        const contact = contacts[0];
-        // Nome completo
-        if (contact.name && contact.name.length > 0) {
-          this.newJovem.nome = contact.name[0];
-        }
-        // Telefone formatado
-        if (contact.tel && contact.tel.length > 0) {
-          const rawPhone = contact.tel[0];
-          this.newJovem.telefone = this.formatPhoneBR(rawPhone);
+      const pasted = window.prompt('Cole o número do telefone (apenas dígitos) ou "Nome, número":');
+      if (pasted) {
+        const parts = pasted.split(',').map(s => s.trim());
+        if (parts.length >= 2) {
+          this.newJovem.nome = parts[0];
+          this.newJovem.telefone = this.formatPhoneBR(parts[1]);
+        } else {
+          this.newJovem.telefone = this.formatPhoneBR(parts[0]);
         }
         this.cdr.detectChanges();
-        this.snackbar.show('Contato importado com sucesso!');
+        this.snackbar.show('Telefone adicionado. Verifique e salve.');
       }
-    } catch (err: unknown) {
-      console.error('Erro ao importar contato:', err);
-      const errorWithName = err as { name?: string; message?: string };
-      // O AbortError acontece caso o usuário feche a lista de contatos nativa sem selecionar
-      if (errorWithName?.name !== 'AbortError') {
-        this.snackbar.show('Erro ao carregar contato do celular: ' + (errorWithName?.message || 'Erro desconhecido'));
-      }
+    } catch (err) {
+      console.error('Erro no fallback de importContato:', err);
+      this.snackbar.show('Não foi possível importar contatos neste dispositivo.');
     }
+  }
+
+  onVCardSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || '');
+      // Tentar extrair FN (full name) e TEL entries
+      const fnMatch = text.match(/FN:(.+)/i);
+      const telMatches = [...text.matchAll(/TEL[^:\r\n]*:(.+)/ig)];
+      if (fnMatch && fnMatch[1]) {
+        this.newJovem.nome = fnMatch[1].trim();
+      }
+      if (telMatches.length > 0) {
+        const rawPhone = telMatches[0][1].trim();
+        this.newJovem.telefone = this.formatPhoneBR(rawPhone);
+      }
+      this.cdr.detectChanges();
+      this.snackbar.show('vCard importado. Verifique nome e telefone antes de salvar.');
+      input.value = '';
+    };
+    reader.readAsText(file);
   }
 
   filteredJovens = computed(() => {

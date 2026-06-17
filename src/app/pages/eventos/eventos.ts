@@ -16,7 +16,7 @@ export class EventosComponent implements OnDestroy {
   data = inject(DataService);
   router = inject(Router);
   snackbar = inject(SnackbarService);
-  private overdueCheckId: any = null;
+  private overdueCheckId: number | null = null;
   
   showModal = signal(false);
   showPresencaModal = signal(false);
@@ -47,7 +47,7 @@ export class EventosComponent implements OnDestroy {
   constructor() {
     // Start periodic check for overdue events that are not finalized
     if (typeof window !== 'undefined') {
-      this.overdueCheckId = setInterval(() => {
+      this.overdueCheckId = window.setInterval(() => {
         try {
           const now = new Date();
           const overdue = this.data.eventos().filter(e => !e.realizado && new Date(e.data) < now);
@@ -60,9 +60,10 @@ export class EventosComponent implements OnDestroy {
 
             // play a short beep
             try {
-              const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-              if (AudioCtx) {
-                const ctx = new AudioCtx();
+              const AudioCtor = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext
+                ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+              if (AudioCtor) {
+                const ctx = new AudioCtor();
                 const o = ctx.createOscillator();
                 const g = ctx.createGain();
                 o.type = 'sine';
@@ -71,13 +72,13 @@ export class EventosComponent implements OnDestroy {
                 o.connect(g);
                 g.connect(ctx.destination);
                 o.start();
-                setTimeout(() => { o.stop(); try { ctx.close(); } catch(e) {} }, 180);
+                setTimeout(() => { o.stop(); try { ctx.close(); } catch { /* ignore */ } }, 180);
               }
-            } catch (err) {
+            } catch {
               // ignore audio errors
             }
           });
-        } catch (err) {
+        } catch {
           // ignore
         }
       }, 7000);
@@ -131,12 +132,13 @@ export class EventosComponent implements OnDestroy {
         const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
         if (diff <= twoDaysMs) {
           this.snackbar.show('Evento finalizado.', 5000, 'success', {
-            label: 'Desfazer',
+              label: 'Desfazer',
             callback: async () => {
               try {
                 await this.data.unfinalizarEvento(eventoId);
                 this.snackbar.show('Finalização desfeita.', 3000, 'success');
-              } catch (err) {
+              } catch (error) {
+                console.error(error);
                 this.snackbar.show('Erro ao desfazer finalização.', 4000, 'error');
               }
             }
@@ -150,7 +152,8 @@ export class EventosComponent implements OnDestroy {
       if (this.selectedEvento() && this.selectedEvento()!.id === eventoId) {
         this.showPresencaModal.set(false);
       }
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       this.snackbar.show('Erro ao finalizar evento.', 4000, 'error');
     }
   }
@@ -166,7 +169,8 @@ export class EventosComponent implements OnDestroy {
       if (this.selectedEvento() && this.selectedEvento()!.id === eventoId) {
         this.showPresencaModal.set(false);
       }
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       this.snackbar.show('Erro ao excluir evento.', 4000, 'error');
     }
   }

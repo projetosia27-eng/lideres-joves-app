@@ -102,13 +102,24 @@
       <div class="bg-gradient-premium rounded-3xl p-8 text-white shadow-2xl shadow-indigo-500/30 relative overflow-hidden group">
         <svg class="absolute -right-4 -bottom-4 w-40 h-40 text-white/10 rotate-12 group-hover:rotate-45 group-hover:scale-110 transition-all duration-700" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
         <h4 class="font-black font-display text-2xl mb-1 uppercase tracking-tighter mix-blend-overlay">Próximo Evento</h4>
-        <p class="text-indigo-100 text-sm mb-6 font-medium">Agendamento em breve</p>
-        <div class="flex justify-between items-center relative z-10">
-          <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/20">Standby</span>
-          <a routerLink="/eventos" class="bg-white text-indigo-600 w-10 h-10 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center">
-            <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
-          </a>
-        </div>
+        @if (nextEvento()) {
+          <p class="text-indigo-100 text-sm mb-2 font-medium">{{ nextEvento()!.nome }}</p>
+          <p class="text-indigo-100 text-xs mb-4">{{ nextEvento()!.data | date:'fullDate':'':'pt-BR' }}</p>
+          <div class="flex justify-between items-center relative z-10">
+            <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/20">Em {{ daysUntil(nextEvento()) }} dia(s)</span>
+            <a routerLink="/eventos" class="bg-white text-indigo-600 w-10 h-10 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+            </a>
+          </div>
+        } @else {
+          <p class="text-indigo-100 text-sm mb-6 font-medium">Agendamento em breve</p>
+          <div class="flex justify-between items-center relative z-10">
+            <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/20">Standby</span>
+            <a routerLink="/eventos" class="bg-white text-indigo-600 w-10 h-10 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+            </a>
+          </div>
+        }
       </div>
 
       <div class="card-premium p-6">

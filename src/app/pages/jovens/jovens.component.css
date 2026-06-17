@@ -12,10 +12,31 @@
 
 .table-wrapper table {
 	width: 100%;
-	table-layout: fixed;
+	table-layout: auto; /* Allow columns to size naturally */
 }
 
 .table-wrapper th, .table-wrapper td {
 	min-width: 0;
-	word-break: break-word;
+}
+
+/* Nome cell: keep in one line with ellipsis to avoid vertical stacking */
+.name-cell {
+	min-width: 160px;
+	max-width: 320px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Actions: allow wrapping so buttons move to next line instead of forcing horizontal scroll */
+.actions-wrapper {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+}
+
+/* On very small screens, make actions appear below content inside the same row cell */
+@media (max-width: 480px) {
+	.actions-wrapper { justify-content: flex-start; }
 }

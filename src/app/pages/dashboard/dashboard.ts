@@ -1,13 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, computed } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { DataService, StatusScore } from '../../data.service';
+import { DatePipe } from '@angular/common';
+import { DataService, StatusScore, Evento } from '../../data.service';
 import { auth } from '../../firebase';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -28,7 +29,7 @@ export class DashboardComponent implements OnInit {
 
         // If userId is not available on client, call verify with paymentId only.
         // The server `verify` will attempt to read metadata.user_id from Mercado Pago.
-        const body: any = { paymentId };
+        const body: { paymentId: string; userId?: string } = { paymentId };
         if (userId) body.userId = userId;
 
         this.http.post<{ success: boolean }>('/api/mercado-pago/verify', body).subscribe({
@@ -45,6 +46,23 @@ export class DashboardComponent implements OnInit {
         });
       }
     });
+  }
+
+  // Próximo evento agendado (não finalizado) — o mais próximo no futuro
+  nextEvento = computed((): Evento | null => {
+    const now = new Date();
+    const futuros = this.data.eventos().filter(e => !e.realizado && new Date(e.data) >= now);
+    if (!futuros || futuros.length === 0) return null;
+    futuros.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    return futuros[0] || null;
+  });
+
+  daysUntil(evento: Evento | null): number | null {
+    if (!evento) return null;
+    const now = new Date();
+    const ed = new Date(evento.data);
+    const diff = ed.getTime() - now.getTime();
+    return diff < 0 ? 0 : Math.ceil(diff / (24 * 60 * 60 * 1000));
   }
 
   getInitials(name: string): string {

@@ -86,7 +86,7 @@
         <tbody class="divide-y divide-slate-100 dark:divide-white/5">
           @for (jovem of filteredJovens(); track jovem.id) {
             <tr class="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors group">
-              <td class="py-4 px-6">
+              <td class="py-4 px-6 name-cell">
                 <div class="flex items-center gap-3">
                   <div class="flex-shrink-0 w-10 h-10 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-indigo-100 to-white dark:from-indigo-500/20 dark:to-slate-800">
                     @if(jovem.fotoUrl) {
@@ -120,8 +120,8 @@
                   </span>
                 </td>
               }
-              <td class="py-4 px-6 text-right">
-                <div class="flex flex-row gap-2 justify-end">
+              <td class="py-4 px-6 actions-cell text-right">
+                <div class="actions-wrapper">
                   <a [routerLink]="['/jovens', jovem.id]" 
                      class="w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all shadow-sm group/btn" 
                      title="Ver Perfil / Editar">
