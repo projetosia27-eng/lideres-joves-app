@@ -140,7 +140,7 @@
           Aniversariantes
         </h4>
         <ul class="space-y-4">
-          @for (aniv of data.aniversariantes().slice(0, 3); track aniv.id) {
+          @for (aniv of data.aniversariantesMes().slice(0, 3); track aniv.id) {
             <li class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-fuchsia-100 dark:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center font-bold text-xs shrink-0">
                 {{ data.getAniversarioDia(aniv.dataNascimento) }}
@@ -151,13 +151,13 @@
               </div>
             </li>
           }
-          @if (data.aniversariantes().length === 0) {
+          @if (data.aniversariantesMes().length === 0) {
              <li class="p-4 text-center text-slate-400 text-xs font-medium bg-white/30 dark:bg-black/10 rounded-xl border border-dashed border-fuchsia-200 dark:border-fuchsia-500/20">
                 Nenhum aniversariante este mês.
              </li>
           }
         </ul>
-        @if (data.aniversariantes().length > 0) {
+        @if (data.aniversariantesMes().length > 0) {
           <a routerLink="/jovens" [queryParams]="{filter: 'aniversariantes'}" class="mt-4 block w-full py-2 bg-fuchsia-500 hover:bg-fuchsia-600 text-white text-center text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors shadow-sm">Ver Todos</a>
         }
       </div>

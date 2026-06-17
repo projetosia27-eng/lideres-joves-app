@@ -345,24 +345,36 @@ export class DataService {
     return parts[2].padStart(2, '0');
   }
 
-  public aniversariantes = computed(() => {
+  // Todos os jovens que possuem data de nascimento cadastrada, ordenados por mês/dia
+  public aniversariantesAll = computed(() => {
+    return this.jovens()
+      .filter(j => !!j.dataNascimento)
+      .map(j => j)
+      .sort((a, b) => {
+        const pa = a.dataNascimento!.split('-');
+        const pb = b.dataNascimento!.split('-');
+        if (pa.length !== 3 || pb.length !== 3) return 0;
+        const ma = parseInt(pa[1], 10);
+        const mb = parseInt(pb[1], 10);
+        const da = parseInt(pa[2], 10);
+        const db = parseInt(pb[2], 10);
+        return ma === mb ? da - db : ma - mb;
+      });
+  });
+
+  // Aniversariantes do mês atual
+  public aniversariantesMes = computed(() => {
     const hoje = new Date();
     const mesAtual = hoje.getMonth();
-    
-    return this.jovens()
-      .filter(j => {
-        if (!j.dataNascimento) return false;
-        // Parse YYYY-MM-DD manually to avoid timezone/UTC issues
-        const parts = j.dataNascimento.split('-');
-        if (parts.length !== 3) return false;
-        const mesNasc = parseInt(parts[1], 10) - 1; // 0-indexed
-        return mesNasc === mesAtual;
-      })
-      .sort((a, b) => {
-        const diaA = parseInt(a.dataNascimento!.split('-')[2], 10);
-        const diaB = parseInt(b.dataNascimento!.split('-')[2], 10);
-        return diaA - diaB;
-      });
+    return this.aniversariantesAll().filter(j => {
+      const parts = j.dataNascimento!.split('-');
+      if (parts.length !== 3) return false;
+      return (parseInt(parts[1], 10) - 1) === mesAtual;
+    }).sort((a, b) => {
+      const diaA = parseInt(a.dataNascimento!.split('-')[2], 10);
+      const diaB = parseInt(b.dataNascimento!.split('-')[2], 10);
+      return diaA - diaB;
+    });
   });
 
   public totalSaidas = computed(() => {
@@ -506,6 +518,17 @@ export class DataService {
     try {
       await updateDoc(doc(db, 'eventos', eventoId), {
         realizado: true,
+        updatedAt: serverTimestamp()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'eventos');
+    }
+  }
+
+  async unfinalizarEvento(eventoId: string) {
+    try {
+      await updateDoc(doc(db, 'eventos', eventoId), {
+        realizado: false,
         updatedAt: serverTimestamp()
       });
     } catch (err) {

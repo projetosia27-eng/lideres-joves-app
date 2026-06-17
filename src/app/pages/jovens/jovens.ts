@@ -26,6 +26,7 @@ export class JovensComponent implements OnInit {
   jovemToDelete = signal<string | null>(null);
   
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
+  showAllBirthdays = signal(false);
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
   dataNascimentoInput = '';
 
@@ -403,6 +404,12 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     hoje.setHours(0, 0, 0, 0);
     return this.data.eventos().filter(e => !e.realizado && new Date(e.data) >= hoje);
   });
+
+  // Tamanhos padrões
+  tamanhosChinelo = ['33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48'];
+  tamanhosRoupa = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
+
+  isValidDate = signal(false);
   
   newJovem = {
     nome: '',
@@ -418,6 +425,19 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
   get contactsSupported(): boolean {
     return typeof window !== 'undefined' && typeof navigator !== 'undefined' && 'contacts' in navigator;
+  }
+
+  // Formata telefone para padrão brasileiro
+  private formatPhoneBR(phone: string): string {
+    const cleaned = phone.replace(/\D/g, '');
+    
+    if (cleaned.length === 11) {
+      return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 7)}-${cleaned.substring(7)}`;
+    } else if (cleaned.length === 10) {
+      return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 6)}-${cleaned.substring(6)}`;
+    }
+    
+    return phone;
   }
 
   async importContact() {
@@ -447,10 +467,10 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
         // Telefone formatado
         if (contact.tel && contact.tel.length > 0) {
           const rawPhone = contact.tel[0];
-          // Limpa caracteres especiais, mantendo os números e o sinal + do DDI se houver
-          this.newJovem.telefone = rawPhone.replace(/[^\d+]/g, '');
+          this.newJovem.telefone = this.formatPhoneBR(rawPhone);
         }
         this.cdr.detectChanges();
+        this.snackbar.show('Contato importado com sucesso!');
       }
     } catch (err: unknown) {
       console.error('Erro ao importar contato:', err);
@@ -467,10 +487,12 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
       return this.data.jovens().filter(j => j.novoConvertido);
     }
     if (this.filterType() === 'aniversariantes') {
-      return this.data.aniversariantes();
+      return this.showAllBirthdays() ? this.data.aniversariantesAll() : this.data.aniversariantesMes();
     }
     return this.data.jovens();
   });
+
+  aniversariantesList = computed(() => this.showAllBirthdays() ? this.data.aniversariantesAll() : this.data.aniversariantesMes());
 
   calculateAge() {
     if (!this.newJovem.dataNascimento) return;
@@ -482,6 +504,44 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
         age--;
     }
     this.newJovem.idade = age;
+  }
+
+  // Função para validar data no formato DD/MM/YYYY
+  private isValidDateString(dateString: string): boolean {
+    if (!dateString || dateString.length !== 10) return false;
+    
+    const parts = dateString.split('/');
+    if (parts.length !== 3) return false;
+
+    const dia = parseInt(parts[0], 10);
+    const mes = parseInt(parts[1], 10);
+    const ano = parseInt(parts[2], 10);
+
+    // Validações básicas
+    if (isNaN(dia) || isNaN(mes) || isNaN(ano)) return false;
+    if (mes < 1 || mes > 12) return false;
+    if (ano < 1900 || ano > new Date().getFullYear()) return false;
+
+    // Validar dias por mês
+    const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    
+    // Verificar ano bissexto
+    if ((ano % 4 === 0 && ano % 100 !== 0) || (ano % 400 === 0)) {
+      diasPorMes[1] = 29;
+    }
+
+    if (dia < 1 || dia > diasPorMes[mes - 1]) return false;
+
+    // Verificar se a data não é no futuro
+    const dateObj = new Date(ano, mes - 1, dia);
+    if (dateObj > new Date()) return false;
+
+    return true;
+  }
+
+  // Verifica se o formulário é válido para salvar
+  isFormValid(): boolean {
+    return !!(this.newJovem.nome && this.isValidDateString(this.dataNascimentoInput));
   }
 
   getInitials(name: string): string {
@@ -603,35 +663,44 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     this.dataNascimentoInput = formatted;
 
     if (formatted.length === 10) {
-      const parts = formatted.split('/');
-      const dia = parseInt(parts[0], 10);
-      const mes = parseInt(parts[1], 10);
-      const ano = parseInt(parts[2], 10);
-      
-      if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12 && ano >= 1900 && ano <= 2100) {
+      // Validar data usando função de validação
+      if (this.isValidDateString(formatted)) {
+        const parts = formatted.split('/');
+        const dia = parseInt(parts[0], 10);
+        const mes = parseInt(parts[1], 10);
+        const ano = parseInt(parts[2], 10);
+        
         const mesStr = String(mes).padStart(2, '0');
         const diaStr = String(dia).padStart(2, '0');
         this.newJovem.dataNascimento = `${ano}-${mesStr}-${diaStr}`;
         this.calculateAge();
+        this.isValidDate.set(true);
       } else {
         this.newJovem.dataNascimento = '';
+        this.isValidDate.set(false);
       }
     } else {
       this.newJovem.dataNascimento = '';
+      this.isValidDate.set(false);
     }
   }
 
   onNativeDateChange(event: Event) {
     const input = event.target as HTMLInputElement;
     const value = input.value; // Format is YYYY-MM-DD
-    if (!value) return;
+    if (!value) {
+      this.isValidDate.set(false);
+      return;
+    }
 
     this.newJovem.dataNascimento = value;
     this.calculateAge();
 
     const parts = value.split('-');
     if (parts.length === 3) {
-      this.dataNascimentoInput = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      const formatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      this.dataNascimentoInput = formatted;
+      this.isValidDate.set(this.isValidDateString(formatted));
     }
   }
 
@@ -656,6 +725,7 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
   openModal() {
     this.showModal.set(true);
     this.dataNascimentoInput = '';
+    this.isValidDate.set(false);
     this.newJovem = { nome: '', idade: 18, dataNascimento: '', tamanhoChinelo: '', tamanhoRoupa: '', telefone: '', fotoUrl: '', score: 'verde', novoConvertido: false };
   }
 
@@ -692,7 +762,10 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
   }
 
   saveJovem() {
-    if (!this.newJovem.nome) return;
+    if (!this.isFormValid()) {
+      this.snackbar.show('Por favor, preencha o nome e uma data de nascimento válida (DD/MM/YYYY)');
+      return;
+    }
     this.data.addJovem(this.newJovem);
     this.closeModal();
   }
@@ -711,7 +784,7 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
   exportBirthdaysToPDF() {
     const doc = new jsPDF();
-    const data = this.data.aniversariantes();
+    const data = this.aniversariantesList();
     const headers = ['Nome', 'Data Nasc.', 'Dia', 'Telefone'];
     
     const rows = data.map(j => [
@@ -722,7 +795,7 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     ]);
 
     const mesAtual = new Date().toLocaleString('pt-BR', { month: 'long' });
-    const titulo = `Aniversariantes de ${mesAtual.charAt(0).toUpperCase() + mesAtual.slice(1)}`;
+    const titulo = this.showAllBirthdays() ? 'Aniversariantes - Todos' : `Aniversariantes de ${mesAtual.charAt(0).toUpperCase() + mesAtual.slice(1)}`;
 
     doc.setFontSize(18);
     doc.text(titulo, 14, 20);

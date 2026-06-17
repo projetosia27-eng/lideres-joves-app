@@ -122,7 +122,31 @@ export class EventosComponent implements OnDestroy {
   async finalizarEvento(eventoId: string) {
     try {
       await this.data.finalizarEvento(eventoId);
-      this.snackbar.show('Evento finalizado.', 3000, 'success');
+      const evento = this.data.eventos().find(e => e.id === eventoId);
+      // If event is within 2 days from now, offer undo
+      if (evento) {
+        const eventDate = new Date(evento.data);
+        const now = new Date();
+        const diff = now.getTime() - eventDate.getTime();
+        const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
+        if (diff <= twoDaysMs) {
+          this.snackbar.show('Evento finalizado.', 5000, 'success', {
+            label: 'Desfazer',
+            callback: async () => {
+              try {
+                await this.data.unfinalizarEvento(eventoId);
+                this.snackbar.show('Finalização desfeita.', 3000, 'success');
+              } catch (err) {
+                this.snackbar.show('Erro ao desfazer finalização.', 4000, 'error');
+              }
+            }
+          }, true);
+        } else {
+          this.snackbar.show('Evento finalizado.', 3000, 'success');
+        }
+      } else {
+        this.snackbar.show('Evento finalizado.', 3000, 'success');
+      }
       if (this.selectedEvento() && this.selectedEvento()!.id === eventoId) {
         this.showPresencaModal.set(false);
       }
