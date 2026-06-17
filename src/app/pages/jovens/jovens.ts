@@ -494,6 +494,13 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
   aniversariantesList = computed(() => this.showAllBirthdays() ? this.data.aniversariantesAll() : this.data.aniversariantesMes());
 
+  formatBirthday(date: string | null | undefined): string {
+    if (!date) return '--';
+    const parts = date.split('-');
+    if (parts.length !== 3) return '--';
+    return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+  }
+
   calculateAge() {
     if (!this.newJovem.dataNascimento) return;
     const birthDate = new Date(this.newJovem.dataNascimento);

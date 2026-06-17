@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto space-y-8 flex flex-col h-full">
+<div class="max-w-7xl mx-auto space-y-8 flex flex-col h-full overflow-x-hidden">
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
     <h1 class="text-3xl font-display font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
       <span class="material-symbols-outlined text-[32px] text-indigo-500 drop-shadow-sm">groups</span>
@@ -68,7 +68,7 @@
   </div>
 
   <div class="card-premium flex-1 overflow-hidden flex flex-col p-0">
-    <div class="overflow-x-auto flex-1">
+    <div class="table-wrapper overflow-x-auto flex-1">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-indigo-50/50 dark:bg-indigo-500/5 text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-widest font-black border-b border-indigo-100 dark:border-indigo-500/20">
@@ -103,10 +103,14 @@
               </td>
               
               @if(filterType() === 'aniversariantes') {
-                <td class="py-4 px-6 text-sm font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-widest">
-                  Dia {{ data.getAniversarioDia(jovem.dataNascimento) }}
-                </td>
-              } @else {
+                  <td class="py-4 px-6 text-sm font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-widest">
+                    @if(!showAllBirthdays()) {
+                      Dia {{ data.getAniversarioDia(jovem.dataNascimento) }}
+                    } @else {
+                      Data {{ formatBirthday(jovem.dataNascimento) }}
+                    }
+                  </td>
+                } @else {
                 <td class="py-4 px-6 hidden sm:table-cell text-sm font-medium text-slate-500 dark:text-slate-400">{{ jovem.idade }}</td>
                 <td class="py-4 px-6 hidden md:table-cell text-sm font-medium text-slate-500 dark:text-slate-400">{{ jovem.telefone }}</td>
                 <td class="py-4 px-6">
