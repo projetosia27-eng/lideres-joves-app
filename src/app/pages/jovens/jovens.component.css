@@ -40,3 +40,18 @@
 @media (max-width: 480px) {
 	.actions-wrapper { justify-content: flex-start; }
 }
+
+/* Top action buttons on mobile should wrap cleanly */
+.top-action-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+}
+
+@media (max-width: 640px) {
+	.top-action-group button {
+		flex: 1 1 auto;
+		min-width: 120px;
+	}
+}

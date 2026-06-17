@@ -26,7 +26,6 @@ export class JovensComponent implements OnInit {
   jovemToDelete = signal<string | null>(null);
   
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
-  showAllBirthdays = signal(false);
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
   dataNascimentoInput = '';
 
@@ -390,7 +389,24 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     window.open(link, '_blank');
   }
 
+  sendBirthdayMessage(jovem: { nome: string; telefone: string | null }) {
+    if (!jovem.telefone) {
+      this.snackbar.show('Este jovem não possui telefone cadastrado.');
+      return;
+    }
 
+    const defaultBirthday = `Feliz aniversário, {nome}! 🎉 Que Deus abençoe seu novo ano de vida com muita paz, alegria e presença divina.`;
+    const template = this.messageTemplate() && this.messageTemplate().includes('{nome}') ? this.messageTemplate() : defaultBirthday;
+    const message = template.replace('{nome}', jovem.nome.split(' ')[0]);
+    const phone = this.normalizePhone(jovem.telefone);
+
+    if (!phone) {
+      this.snackbar.show('Telefone inválido para envio de mensagem.');
+      return;
+    }
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  }
 
   normalizePhone(raw: string | null | undefined) {
     if (!raw) return null;
@@ -429,7 +445,7 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
   get isIOS(): boolean {
     if (typeof navigator === 'undefined') return false;
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
   }
 
   // Formata telefone para padrão brasileiro
@@ -533,23 +549,59 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     reader.readAsText(file);
   }
 
+  private parseBirthDate(date?: string | null): Date | null {
+    if (!date) return null;
+
+    const parseIso = (value: string) => {
+      const parts = value.split('-');
+      if (parts.length !== 3) return null;
+      const [year, month, day] = parts.map(part => Number(part));
+      if (!year || !month || !day) return null;
+      return new Date(year, month - 1, day);
+    };
+
+    const parseBr = (value: string) => {
+      const parts = value.split('/');
+      if (parts.length !== 3) return null;
+      const [day, month, year] = parts.map(part => Number(part));
+      if (!year || !month || !day) return null;
+      return new Date(year, month - 1, day);
+    };
+
+    return date.includes('-') ? parseIso(date) : date.includes('/') ? parseBr(date) : null;
+  }
+
+  private sortByBirthday(a: { dataNascimento?: string | null }, b: { dataNascimento?: string | null }) {
+    const da = this.parseBirthDate(a.dataNascimento);
+    const db = this.parseBirthDate(b.dataNascimento);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+
+    const ma = da.getMonth();
+    const mb = db.getMonth();
+    if (ma !== mb) return ma - mb;
+    return da.getDate() - db.getDate();
+  }
+
   filteredJovens = computed(() => {
     if (this.filterType() === 'novos') {
       return this.data.jovens().filter(j => j.novoConvertido);
     }
     if (this.filterType() === 'aniversariantes') {
-      return this.showAllBirthdays() ? this.data.aniversariantesAll() : this.data.aniversariantesMes();
+      return this.data.jovens().slice().sort((a, b) => this.sortByBirthday(a, b));
     }
-    return this.data.jovens();
+    return this.data.jovens().slice().sort((a, b) => this.sortByBirthday(a, b));
   });
 
-  aniversariantesList = computed(() => this.showAllBirthdays() ? this.data.aniversariantesAll() : this.data.aniversariantesMes());
+  aniversariantesList = computed(() => {
+    return this.data.jovens().slice().sort((a, b) => this.sortByBirthday(a, b));
+  });
 
   formatBirthday(date: string | null | undefined): string {
-    if (!date) return '--';
-    const parts = date.split('-');
-    if (parts.length !== 3) return '--';
-    return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    const parsed = this.parseBirthDate(date);
+    if (!parsed) return '--';
+    return parsed.toLocaleDateString('pt-BR');
   }
 
   calculateAge() {
@@ -852,8 +904,7 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
       j.telefone || '--'
     ]);
 
-    const mesAtual = new Date().toLocaleString('pt-BR', { month: 'long' });
-    const titulo = this.showAllBirthdays() ? 'Aniversariantes - Todos' : `Aniversariantes de ${mesAtual.charAt(0).toUpperCase() + mesAtual.slice(1)}`;
+    const titulo = 'Aniversariantes';
 
     doc.setFontSize(18);
     doc.text(titulo, 14, 20);
@@ -870,7 +921,7 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
       styles: { fontSize: 9 }
     });
 
-    doc.save(`aniversariantes_${mesAtual}.pdf`);
+    doc.save('aniversariantes.pdf');
   }
 
   cancelDelete() {

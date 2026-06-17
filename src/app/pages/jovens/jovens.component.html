@@ -6,25 +6,17 @@
     </h1>
     
     <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full lg:w-auto">
-      <div class="flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto shrink-0 min-w-0">
+      <div class="top-action-group flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto shrink-0 min-w-0">
         <button (click)="openMessageModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-xs font-black uppercase tracking-wider rounded-xl transition-colors shadow-sm hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/20 cursor-pointer">
           <span class="material-symbols-outlined text-[18px]">campaign</span>
           <span>Avisos</span>
         </button>
 
         @if(filterType() === 'aniversariantes') {
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <button (click)="exportBirthdaysToPDF()" class="inline-flex items-center gap-2 px-4 py-2 bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-500/10 dark:text-fuchsia-400 text-xs font-black uppercase tracking-wider rounded-xl transition-colors shadow-sm hover:bg-fuchsia-100 dark:hover:bg-fuchsia-500/20 border border-fuchsia-200 dark:border-fuchsia-500/20 cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
               <span>PDF</span>
-            </button>
-            <button (click)="showAllBirthdays.set(!showAllBirthdays())" class="inline-flex items-center gap-2 px-3 py-2 bg-white text-slate-700 dark:bg-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 transition-colors">
-              <span class="material-symbols-outlined text-[16px]">view_list</span>
-              @if(!showAllBirthdays()) {
-                <span>Mostrar Todos</span>
-              } @else {
-                <span>Mostrar Mês</span>
-              }
             </button>
           </div>
         }
@@ -35,7 +27,7 @@
         </button>
       </div>
 
-      <div class="w-full lg:w-auto flex bg-slate-100/50 dark:bg-white/5 p-1 rounded-2xl border border-slate-200 dark:border-white/5 backdrop-blur-md overflow-x-auto shrink-0 min-w-0 scrollbar-none">
+      <div class="w-full lg:w-auto flex flex-wrap bg-slate-100/50 dark:bg-white/5 p-1 rounded-2xl border border-slate-200 dark:border-white/5 backdrop-blur-md overflow-x-auto shrink-0 min-w-0 scrollbar-none">
          <button 
             (click)="filterType.set('todos')" 
             [class.bg-white]="filterType() === 'todos'"
@@ -67,15 +59,16 @@
     </div>
   </div>
 
-  <div class="card-premium flex-1 overflow-hidden flex flex-col p-0">
-    <div class="table-wrapper overflow-x-auto flex-1">
+  <div class="card-premium flex-1 overflow-hidden flex flex-col p-0 min-h-0">
+    <div class="table-wrapper overflow-x-auto overflow-y-auto flex-1 min-h-0">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-indigo-50/50 dark:bg-indigo-500/5 text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-widest font-black border-b border-indigo-100 dark:border-indigo-500/20">
             <th class="py-3 px-6">Nome</th>
             @if(filterType() === 'aniversariantes') {
-              <th class="py-3 px-6">Dia</th>
-            } @else {
+              <th class="py-3 px-6">Data</th>
+            }
+            @if(filterType() !== 'aniversariantes') {
               <th class="py-3 px-6 hidden sm:table-cell">Idade</th>
               <th class="py-3 px-6 hidden md:table-cell">Telefone</th>
               <th class="py-3 px-6">Status</th>
@@ -103,14 +96,10 @@
               </td>
               
               @if(filterType() === 'aniversariantes') {
-                  <td class="py-4 px-6 text-sm font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-widest">
-                    @if(!showAllBirthdays()) {
-                      Dia {{ data.getAniversarioDia(jovem.dataNascimento) }}
-                    } @else {
-                      Data {{ formatBirthday(jovem.dataNascimento) }}
-                    }
-                  </td>
-                } @else {
+                <td class="py-4 px-6 text-sm font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-widest">
+                  {{ formatBirthday(jovem.dataNascimento) }}
+                </td>
+              } @else {
                 <td class="py-4 px-6 hidden sm:table-cell text-sm font-medium text-slate-500 dark:text-slate-400">{{ jovem.idade }}</td>
                 <td class="py-4 px-6 hidden md:table-cell text-sm font-medium text-slate-500 dark:text-slate-400">{{ jovem.telefone }}</td>
                 <td class="py-4 px-6">
@@ -122,16 +111,25 @@
               }
               <td class="py-4 px-6 actions-cell text-right">
                 <div class="actions-wrapper">
-                  <a [routerLink]="['/jovens', jovem.id]" 
-                     class="w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all shadow-sm group/btn" 
-                     title="Ver Perfil / Editar">
-                    <span class="material-symbols-outlined text-[18px]">edit_square</span>
-                  </a>
-                  <button (click)="deletarJovem(jovem.id)" 
-                          class="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-500 dark:hover:text-white transition-all shadow-sm group/btn"
-                          title="Excluir">
-                    <span class="material-symbols-outlined text-[18px]">delete</span>
-                  </button>
+                  @if(filterType() === 'aniversariantes') {
+                    <button (click)="sendBirthdayMessage(jovem)"
+                            [disabled]="!jovem.telefone"
+                            class="w-9 h-9 flex items-center justify-center rounded-xl bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 hover:bg-fuchsia-600 hover:text-white dark:hover:bg-fuchsia-500 dark:hover:text-white transition-all shadow-sm group/btn disabled:opacity-40 disabled:cursor-not-allowed"
+                            title="Enviar mensagem de aniversário">
+                      <span class="material-symbols-outlined text-[18px]">cake</span>
+                    </button>
+                  } @else {
+                    <a [routerLink]="['/jovens', jovem.id]" 
+                       class="w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all shadow-sm group/btn" 
+                       title="Ver Perfil / Editar">
+                      <span class="material-symbols-outlined text-[18px]">edit_square</span>
+                    </a>
+                    <button (click)="deletarJovem(jovem.id)" 
+                            class="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-500 dark:hover:text-white transition-all shadow-sm group/btn"
+                            title="Excluir">
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  }
                 </div>
               </td>
             </tr>
