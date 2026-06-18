@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, ChangeDetectorRef, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { DataService, StatusScore } from '../../data.service';
+import { DataService, Evento, StatusScore } from '../../data.service';
 import { ImgbbService } from '../../imgbb.service';
 import { SnackbarService } from '../../shared/snackbar.service';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +27,11 @@ export class JovensComponent implements OnInit {
   
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
+  previousMessageTemplate = signal('');
   dataNascimentoInput = '';
+  selectedEventoIdForMensagem = '';
+  selectedEventoMensagem = signal<Evento | null>(null);
+  messageModalFromEvento = signal(false);
 
   activeGeneratorCategory = signal<'leitura' | 'estudo' | 'novo' | null>(null);
   apiLoading = signal(false);
@@ -308,6 +312,7 @@ Que o Consolador seja seu melhor amigo hoje! Conte comigo para o que precisar. �
   ];
 
   async gerarComApiExterna() {
+    this.previousMessageTemplate.set(this.messageTemplate());
     this.apiLoading.set(true);
     this.apiError.set('');
     try {
@@ -377,7 +382,24 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
   }
 
   aplicarPreset(texto: string) {
+    this.previousMessageTemplate.set(this.messageTemplate());
     this.messageTemplate.set(texto);
+  }
+
+  trackMessageChange(value: string) {
+    const current = this.messageTemplate();
+    if (current && !value) {
+      this.previousMessageTemplate.set(current);
+    }
+    this.messageTemplate.set(value);
+  }
+
+  undoMessageChange() {
+    const previous = this.previousMessageTemplate();
+    if (!previous) return;
+    const current = this.messageTemplate();
+    this.messageTemplate.set(previous);
+    this.previousMessageTemplate.set(current);
   }
   
   sendTo(jovem: { nome: string; telefone: string | null }) {
@@ -671,24 +693,13 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
       const eventoId = params['avisoEvento'];
       if (eventoId) {
-        this.showMessageModal.set(true);
-        // Wait a tick for modal to render and select to exist
-        setTimeout(() => {
-          const select = document.getElementById('eventSelect') as HTMLSelectElement;
-          if (select) {
-            select.value = eventoId;
-            // dispatch change event to run the selecting logic
-            select.dispatchEvent(new Event('change'));
-          } else {
-             // Fallback if select doesn't exist yet but data does
-             const evento = this.data.eventos().find(e => e.id === eventoId);
-             if (evento) {
-                const parts = evento.data.split('-');
-                const dataStr = parts.length === 3 ? `${parts[2]}/${parts[1]}` : evento.data;
-                this.messageTemplate.set(`Olá {nome}! Teremos o evento "${evento.nome}" no dia ${dataStr}. Contamos com você!`);
-             }
-          }
-        }, 100);
+        const evento = this.data.eventos().find(e => e.id === eventoId);
+        if (evento) {
+          this.messageModalFromEvento.set(true);
+          this.selectedEventoIdForMensagem = eventoId;
+          this.selecionarEventoParaMensagem(eventoId);
+          this.openMessageModal();
+        }
       }
     });
   }
@@ -839,21 +850,29 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
     this.newJovem = { nome: '', idade: 18, dataNascimento: '', tamanhoChinelo: '', tamanhoRoupa: '', telefone: '', fotoUrl: '', score: 'verde', novoConvertido: false };
   }
 
-  openMessageModal() {
+  openMessageModal(fromEvento = false) {
+    this.messageModalFromEvento.set(fromEvento);
     this.showMessageModal.set(true);
   }
 
-  selecionarEventoParaMensagem(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    if (!select.value) return;
-    const evento = this.data.eventos().find(e => e.id === select.value);
+  selecionarEventoParaMensagem(event: Event | string) {
+    const eventoId = typeof event === 'string'
+      ? event
+      : (event.target as HTMLSelectElement).value;
+
+    if (!eventoId) {
+      this.selectedEventoMensagem.set(null);
+      this.selectedEventoIdForMensagem = '';
+      return;
+    }
+
+    const evento = this.data.eventos().find(e => e.id === eventoId);
     if (evento) {
-      // Create a nice message
+      this.selectedEventoMensagem.set(evento);
+      this.selectedEventoIdForMensagem = eventoId;
       const parts = evento.data.split('-');
       const dataStr = parts.length === 3 ? `${parts[2]}/${parts[1]}` : evento.data;
       this.messageTemplate.set(`Olá {nome}! Teremos o evento "${evento.nome}" no dia ${dataStr}. Contamos com você!`);
-      // Reset select
-      select.value = '';
     }
   }
 
@@ -869,6 +888,13 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
   closeModal() {
     this.showModal.set(false);
+  }
+
+  closeMessageModal() {
+    this.showMessageModal.set(false);
+    this.messageModalFromEvento.set(false);
+    this.selectedEventoIdForMensagem = '';
+    this.selectedEventoMensagem.set(null);
   }
 
   saveJovem() {
