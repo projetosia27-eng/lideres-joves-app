@@ -27,7 +27,7 @@ export class JovensComponent implements OnInit {
   
   filterType = signal<'todos' | 'novos' | 'aniversariantes'>('todos');
   messageTemplate = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
-  previousMessageTemplate = signal('');
+  messageTemplateBackup = signal('Olá {nome}! Teremos um evento especial neste sábado. Contamos com você!');
   dataNascimentoInput = '';
   selectedEventoIdForMensagem = '';
   selectedEventoMensagem = signal<Evento | null>(null);
@@ -312,7 +312,7 @@ Que o Consolador seja seu melhor amigo hoje! Conte comigo para o que precisar. �
   ];
 
   async gerarComApiExterna() {
-    this.previousMessageTemplate.set(this.messageTemplate());
+    this.messageTemplateBackup.set(this.messageTemplate());
     this.apiLoading.set(true);
     this.apiError.set('');
     try {
@@ -382,24 +382,18 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
   }
 
   aplicarPreset(texto: string) {
-    this.previousMessageTemplate.set(this.messageTemplate());
+    this.messageTemplateBackup.set(this.messageTemplate());
     this.messageTemplate.set(texto);
   }
 
   trackMessageChange(value: string) {
-    const current = this.messageTemplate();
-    if (current && !value) {
-      this.previousMessageTemplate.set(current);
-    }
     this.messageTemplate.set(value);
   }
 
   undoMessageChange() {
-    const previous = this.previousMessageTemplate();
+    const previous = this.messageTemplateBackup();
     if (!previous) return;
-    const current = this.messageTemplate();
     this.messageTemplate.set(previous);
-    this.previousMessageTemplate.set(current);
   }
   
   sendTo(jovem: { nome: string; telefone: string | null }) {
@@ -417,7 +411,8 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
       return;
     }
 
-    const defaultBirthday = `Feliz aniversário, {nome}! 🎉 Que Deus abençoe seu novo ano de vida com muita paz, alegria e presença divina.`;
+    const defaultBirthday = `Feliz aniversário, {nome}! 🎉
+Que o Senhor renove suas forças, encha seu coração de alegria e te faça prosperar em cada passo deste novo ano de vida.`;
     const template = this.messageTemplate() && this.messageTemplate().includes('{nome}') ? this.messageTemplate() : defaultBirthday;
     const message = template.replace('{nome}', jovem.nome.split(' ')[0]);
     const phone = this.normalizePhone(jovem.telefone);
@@ -852,6 +847,7 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
   openMessageModal(fromEvento = false) {
     this.messageModalFromEvento.set(fromEvento);
+    this.messageTemplateBackup.set(this.messageTemplate());
     this.showMessageModal.set(true);
   }
 
