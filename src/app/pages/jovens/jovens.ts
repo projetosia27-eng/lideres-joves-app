@@ -413,8 +413,8 @@ Tenha um dia repleto de paz e vitórias! 🙌✨`;
 
     const defaultBirthday = `Feliz aniversário, {nome}! 🎉
 Que o Senhor renove suas forças, encha seu coração de alegria e te faça prosperar em cada passo deste novo ano de vida.`;
-    const template = this.messageTemplate() && this.messageTemplate().includes('{nome}') ? this.messageTemplate() : defaultBirthday;
-    const message = template.replace('{nome}', jovem.nome.split(' ')[0]);
+    // Use a birthday-specific template when sending from the anniversaries list
+    const message = defaultBirthday.replace('{nome}', jovem.nome.split(' ')[0]);
     const phone = this.normalizePhone(jovem.telefone);
 
     if (!phone) {
