@@ -176,12 +176,19 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <label for="jovemNome" class="block text-sm font-medium text-slate-700">Nome completo</label>
-              @if (contactsSupported) {
+              @if (contactsSupported || isIOS) {
                 <button type="button" (click)="importContact()" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1 cursor-pointer">
-                  <span class="material-symbols-outlined text-[15px]">phone_android</span>
+                  @if (isIOS) {
+                    <span class="material-symbols-outlined text-[15px]">phone_iphone</span>
+                  } @else {
+                    <span class="material-symbols-outlined text-[15px]">phone_android</span>
+                  }
                   Importar do Celular
                 </button>
               }
+
+              <!-- Hidden vCard input used as fallback for iOS / unsupported browsers -->
+              <input id="vcardInput" type="file" accept=".vcf" (change)="onVCardSelected($event)" style="display:none" />
             </div>
             <input id="jovemNome" type="text" [(ngModel)]="newJovem.nome" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm bg-white text-slate-900" placeholder="João da Silva">
           </div>
